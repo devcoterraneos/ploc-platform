@@ -1,19 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Heart, ArrowLeft, ChevronRight, Check } from "lucide-react";
+import { X, Heart, ArrowLeft, ChevronRight, Check, Target, Wrench, TrendingUp } from "lucide-react";
 import { formatCLP } from "@/lib/data";
 
 export interface ProjectForModal {
   id: string;
   name: string;
   description: string;
+  objective: string;
+  resourcesUse: string;
   goal: number;
   raised: number;
   imageGradient: string;
   donationAmounts: number[];
   category: string;
   categoryColor: string;
+  categoryBg: string;
 }
 
 interface DonationModalProps {
@@ -23,9 +26,9 @@ interface DonationModalProps {
 
 function ProgressBar({ value, className = "" }: { value: number; className?: string }) {
   return (
-    <div className={`h-1.5 rounded-full bg-gray-100 overflow-hidden ${className}`}>
+    <div className={`h-2 rounded-full bg-gray-100 overflow-hidden ${className}`}>
       <div
-        className="h-full bg-[#8B1A1A] rounded-full"
+        className="h-full bg-[#8B1A1A] rounded-full transition-all"
         style={{ width: `${value}%` }}
       />
     </div>
@@ -73,6 +76,28 @@ function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
 
 // ─── Step 1: Presentación del proyecto ────────────────────────────────────────
 
+function InfoSection({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex gap-3.5 py-4 border-b border-gray-100 last:border-0">
+      <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-[#8B1A1A]">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">{title}</p>
+        <p className="text-sm text-gray-700 leading-relaxed">{children}</p>
+      </div>
+    </div>
+  );
+}
+
 function Step1({
   project,
   onNext,
@@ -81,43 +106,59 @@ function Step1({
   onNext: () => void;
 }) {
   const pct = Math.min(Math.round((project.raised / project.goal) * 100), 100);
+  const remaining = project.goal - project.raised;
 
   return (
     <div>
-      {/* Project image */}
-      <div
-        className="h-44 w-full flex items-end p-5 rounded-xl mb-5"
-        style={{ background: project.imageGradient }}
-      >
-        <span
-          className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 text-white uppercase tracking-wide"
-        >
-          {project.category}
-        </span>
+      {/* Project header: circular image + title */}
+      <div className="flex items-center gap-4 mb-6">
+        <div
+          className="flex-shrink-0 w-16 h-16 rounded-full shadow-md ring-2 ring-white"
+          style={{ background: project.imageGradient }}
+        />
+        <div className="min-w-0">
+          <span
+            className="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full mb-1.5"
+            style={{ backgroundColor: project.categoryBg, color: project.categoryColor }}
+          >
+            {project.category}
+          </span>
+          <h2 className="text-base font-bold text-gray-900 leading-tight">{project.name}</h2>
+        </div>
       </div>
 
-      <h2 className="text-xl font-bold text-gray-900 mb-2">{project.name}</h2>
-      <p className="text-sm text-gray-500 leading-relaxed mb-5">
-        {project.description}
-      </p>
+      {/* Info sections */}
+      <div className="bg-gray-50/70 rounded-2xl border border-gray-100 px-4 mb-6 divide-y divide-gray-100">
+        <InfoSection
+          icon={<Target className="w-4 h-4" />}
+          title="¿Cuál es el Objetivo?"
+        >
+          {project.objective}
+        </InfoSection>
 
-      {/* Progress */}
-      <div className="bg-gray-50 rounded-xl p-4 mb-6">
-        <div className="flex justify-between items-baseline mb-2">
-          <span className="text-lg font-bold text-[#8B1A1A]">
-            {formatCLP(project.raised)}
+        <InfoSection
+          icon={<Wrench className="w-4 h-4" />}
+          title="¿En qué se ocuparán los recursos?"
+        >
+          {project.resourcesUse}
+        </InfoSection>
+
+        <InfoSection
+          icon={<TrendingUp className="w-4 h-4" />}
+          title="¿Cuánto falta?"
+        >
+          <span className="font-bold text-[#8B1A1A]">{formatCLP(remaining)}</span>{" "}
+          para alcanzar la meta de {formatCLP(project.goal)}
+          <ProgressBar value={pct} className="mt-2.5" />
+          <span className="text-xs text-gray-400 mt-1 block">
+            {formatCLP(project.raised)} recaudado · {pct}% completado
           </span>
-          <span className="text-xs text-gray-400">
-            Meta: {formatCLP(project.goal)}
-          </span>
-        </div>
-        <ProgressBar value={pct} />
-        <p className="text-xs font-semibold text-[#8B1A1A] mt-1.5">{pct}% recaudado</p>
+        </InfoSection>
       </div>
 
       <button
         onClick={onNext}
-        className="w-full flex items-center justify-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white font-bold py-3.5 rounded-xl transition-colors"
+        className="w-full flex items-center justify-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white font-bold py-3.5 rounded-xl transition-colors shadow-sm shadow-red-900/20"
       >
         <Heart className="w-4 h-4 fill-white" />
         Quiero apoyar este proyecto
@@ -246,8 +287,7 @@ function Step3({
   function handleFlowClick() {
     if (!isValid) return;
     // TODO: conectar con /api/donate → Flow payment
-    // Por ahora redirige a la página de donación
-    window.location.href = `/donar?proyecto=${project.id}&monto=${amount}&nombre=${encodeURIComponent(form.name)}&email=${encodeURIComponent(form.email)}`;
+    window.location.href = "/gracias";
   }
 
   return (

@@ -59,7 +59,20 @@ function ProjectCard({
         </p>
 
         <button
-          onClick={() => onDonate(project)}
+          onClick={() => onDonate({
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            objective: project.objective,
+            resourcesUse: project.resourcesUse,
+            goal: project.goal,
+            raised: project.raised,
+            imageGradient: project.imageGradient,
+            donationAmounts: project.donationAmounts,
+            category: project.category,
+            categoryColor: project.categoryColor,
+            categoryBg: project.categoryBg,
+          })}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-semibold transition-colors"
           style={{ backgroundColor: primaryColor }}
         >
