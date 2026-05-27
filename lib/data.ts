@@ -79,10 +79,10 @@ export const defaultSiteSettings: SiteSettings = {
   sealUrl: "/images/sello-ploc.svg",
   primaryColor: "#8B1A1A",
   secondaryColor: "#111827",
-  heroImageUrl: "/images/hero-puerto-octay.jpg",
-  heroTitle: "Juntos construimos\nel futuro de nuestro",
-  heroHighlight: "territorio",
-  heroSubtitle: "Tu apoyo impulsa proyectos que mejoran la calidad de vida y cuidan lo que nos hace únicos.",
+  heroImageUrl: "/images/hero-puerto-octay-2.jpg",
+  heroTitle: "Juntos construimos\nel futuro de",
+  heroHighlight: "Puerto Octay",
+  heroSubtitle: "Bienvenidos a la plataforma de Crowdfunding de Corporación PLOC. Elige un proyecto y haz tu donación para hacerlo posible.",
   heroCommunityCount: "846",
   heroCommunityText: "personas que ya apoyan a Puerto Octay",
   heroDonarText: "Donar ahora",
@@ -113,8 +113,8 @@ export const defaultSiteSettings: SiteSettings = {
   socialLinkedin: "https://www.linkedin.com/company/corporacion-ploc",
   footerDescription:
     "Conectamos personas, ideas y recursos para impulsar proyectos que fortalecen la vida local del sur de Chile.",
-  showMembershipSection: true,
-  showTransparencySection: true,
+  showMembershipSection: false,
+  showTransparencySection: false,
 };
 
 // ─── Campaigns / Projects ─────────────────────────────────────────────────────
