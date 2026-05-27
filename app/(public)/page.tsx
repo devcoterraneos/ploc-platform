@@ -1,67 +1,34 @@
-import HeroSection from "@/components/HeroSection";
-import MetricsSection from "@/components/MetricsSection";
-import ProjectsSection from "@/components/ProjectsSection";
-import TestimonialSection from "@/components/TestimonialSection";
-import MembershipSection from "@/components/MembershipSection";
-import TransparencySection from "@/components/TransparencySection";
-import FinalCTA from "@/components/FinalCTA";
-import {
-  mainCampaign,
-  featuredCampaigns,
-  defaultMetrics,
-  defaultTestimonial,
-  defaultSiteSettings,
-} from "@/lib/data";
+import LandingHero from "@/components/landing/LandingHero";
+import LandingMetrics from "@/components/landing/LandingMetrics";
+import LandingProjects from "@/components/landing/LandingProjects";
+import LandingTestimonial from "@/components/landing/LandingTestimonial";
+import LandingMembership from "@/components/landing/LandingMembership";
+import LandingTransparency from "@/components/landing/LandingTransparency";
 
 export default function HomePage() {
-  const settings = defaultSiteSettings;
-  const metrics = settings.metrics ?? defaultMetrics;
-
   return (
     <>
-      {/* Hero + Campaign card */}
-      <HeroSection
-        mainCampaign={mainCampaign}
-        communityCount={settings.heroCommunityCount}
-      />
+      {/* Hero + campaña activa */}
+      <LandingHero />
 
-      {/* Metrics strip */}
-      <MetricsSection metrics={metrics} />
+      {/* Métricas de impacto */}
+      <LandingMetrics />
 
-      {/* Featured projects */}
-      <section className="pt-12 pb-0 bg-[#F9FAFB]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-0">
-          <ProjectsSection
-            campaigns={featuredCampaigns}
-            title={settings.projectsSectionTitle}
-            subtitle={settings.projectsSectionSubtitle}
-          />
-        </div>
-      </section>
+      {/* Proyectos destacados + modal de donación */}
+      <LandingProjects />
 
-      {/* Testimonial */}
-      <TestimonialSection testimonial={defaultTestimonial} />
+      {/* Testimonio */}
+      <LandingTestimonial />
 
-      {/* Membership + Transparency */}
+      {/* Hazte socio/a + Transparencia */}
       <section className="py-16 lg:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-6">
-            <MembershipSection />
-            <TransparencySection
-              title={settings.transparencyTitle}
-              subtitle={settings.transparencySubtitle}
-              items={settings.transparencyItems}
-            />
+            <LandingMembership />
+            <LandingTransparency />
           </div>
         </div>
       </section>
-
-      {/* Final CTA */}
-      <FinalCTA
-        title={settings.ctaTitle}
-        subtitle={settings.ctaSubtitle}
-        buttonText={settings.ctaButtonText}
-      />
     </>
   );
 }

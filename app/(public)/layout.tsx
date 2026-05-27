@@ -1,5 +1,5 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import LandingHeader from "@/components/landing/LandingHeader";
+import LandingFooter from "@/components/landing/LandingFooter";
 
 export default function PublicLayout({
   children,
@@ -8,9 +8,9 @@ export default function PublicLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-900">
-      <Header />
+      <LandingHeader />
       <main className="flex-1">{children}</main>
-      <Footer />
+      <LandingFooter />
     </div>
   );
 }
