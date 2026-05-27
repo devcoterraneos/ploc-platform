@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Heart, ArrowRight, Share2 } from "lucide-react";
+import { Heart } from "lucide-react";
+import GraciasShare from "@/components/landing/GraciasShare";
 
 export const metadata: Metadata = {
   title: "¡Gracias por tu aporte!",
@@ -28,7 +28,7 @@ export default function GraciasPage() {
         </p>
 
         {/* Impact message */}
-        <div className="bg-red-50 rounded-2xl p-6 mb-8 border border-red-100">
+        <div className="bg-red-50 rounded-2xl p-6 mb-10 border border-red-100">
           <p className="text-[#8B1A1A] font-semibold mb-1">
             Puerto Octay te lo agradece
           </p>
@@ -38,28 +38,8 @@ export default function GraciasPage() {
           </p>
         </div>
 
-        {/* Share */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <Share2 className="w-4 h-4 text-gray-400" />
-          <p className="text-sm text-gray-500">Comparte y ayuda a correr la voz</p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/proyectos"
-            className="inline-flex items-center justify-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white font-bold px-6 py-3.5 rounded-full transition-colors text-sm"
-          >
-            Ver proyectos
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold px-6 py-3.5 rounded-full transition-colors text-sm border border-gray-200"
-          >
-            Volver al inicio
-          </Link>
-        </div>
+        {/* Share CTA */}
+        <GraciasShare />
       </div>
     </div>
   );
