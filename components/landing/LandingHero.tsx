@@ -10,6 +10,7 @@ export default function LandingHero() {
 
   return (
     <section id="inicio" className="relative overflow-hidden min-h-[500px] lg:min-h-[580px]">
+      {/* Background image */}
       <div className="absolute inset-0">
         <Image
           src={s.heroImageUrl}
@@ -20,29 +21,32 @@ export default function LandingHero() {
           sizes="100vw"
           quality={85}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/65 to-white/10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
+        {/* Dark gradient overlay — left heavy so text always contrasts */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/20" />
+        {/* Subtle bottom vignette */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
       </div>
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
         <div className="max-w-2xl">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 drop-shadow-sm">
             {titleLines.map((line, i) => (
               <span key={i}>
                 {line}
                 {i < titleLines.length - 1 && <br />}
               </span>
             ))}{" "}
-            <span style={{ color: s.primaryColor }}>{s.heroHighlight}</span>
+            {/* Lighter red so it pops on the dark overlay */}
+            <span className="text-red-300">{s.heroHighlight}</span>
           </h1>
 
-          <p className="text-gray-600 text-lg mb-10 leading-relaxed max-w-lg">
+          <p className="text-white/85 text-lg mb-10 leading-relaxed max-w-lg">
             {s.heroSubtitle}
           </p>
 
           <a
             href="#proyectos"
-            className="inline-flex items-center gap-2 text-white font-bold px-8 py-4 rounded-full transition-colors text-base shadow-lg"
+            className="inline-flex items-center gap-2 text-white font-bold px-8 py-4 rounded-full transition-all text-base shadow-lg hover:scale-[1.02] active:scale-[0.98]"
             style={{ backgroundColor: s.primaryColor }}
           >
             <Heart className="w-5 h-5 fill-white" />
@@ -52,7 +56,7 @@ export default function LandingHero() {
       </div>
 
       <div className="absolute bottom-2 right-3">
-        <span className="text-white/40 text-xs">
+        <span className="text-white/30 text-xs">
           © Wikimedia Commons / eurimaco — CC BY-SA 3.0
         </span>
       </div>
