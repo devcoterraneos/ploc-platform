@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Share2, Check, Copy, Mail } from "lucide-react";
 
-const SHARE_URL = "https://ploc.pages.dev";
+const SHARE_URL = "https://corporacionploc.pages.dev";
 const SHARE_TITLE = "Apoya a Puerto Octay";
 const SHARE_TEXT =
   "Acabo de apoyar un proyecto de Corporación PLOC. ¡Únete tú también y ayuda a transformar Puerto Octay!";
