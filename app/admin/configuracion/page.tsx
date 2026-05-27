@@ -16,12 +16,10 @@ const sections: SettingsSection[] = [
     id: "hero",
     label: "Hero principal",
     fields: [
-      { key: "heroTitle", label: "Título del hero", type: "text" },
-      { key: "heroHighlight", label: "Texto destacado (rojo)", type: "text" },
-      { key: "heroSubtitle", label: "Subtítulo del hero", type: "text" },
-      { key: "heroCommunityCount", label: "Número de personas en comunidad", type: "number" },
-      { key: "heroDonarText", label: "Texto botón donar", type: "text" },
-      { key: "heroProyectosText", label: "Texto botón proyectos", type: "text" },
+      { key: "heroImageUrl", label: "URL imagen hero", type: "url" },
+      { key: "heroTitle", label: "Título (usa \\n para salto de línea)", type: "text" },
+      { key: "heroHighlight", label: "Texto destacado en color primario", type: "text" },
+      { key: "heroSubtitle", label: "Subtítulo", type: "textarea" },
     ],
   },
   {
@@ -29,31 +27,20 @@ const sections: SettingsSection[] = [
     label: "Marca y colores",
     fields: [
       { key: "primaryColor", label: "Color primario", type: "color" },
-      { key: "secondaryColor", label: "Color secundario", type: "color" },
-      { key: "heroImageUrl", label: "URL imagen hero", type: "url" },
-      { key: "footerDescription", label: "Descripción footer", type: "textarea" },
+      { key: "footerDescription", label: "Descripción en el footer", type: "textarea" },
     ],
   },
   {
     id: "projects",
     label: "Sección proyectos",
     fields: [
-      { key: "projectsSectionSubtitle", label: "Label superior (rojo)", type: "text" },
+      { key: "projectsSectionSubtitle", label: "Label superior (pequeño, color primario)", type: "text" },
       { key: "projectsSectionTitle", label: "Título de la sección", type: "text" },
     ],
   },
   {
-    id: "cta",
-    label: "CTA final",
-    fields: [
-      { key: "ctaTitle", label: "Título del CTA", type: "textarea" },
-      { key: "ctaSubtitle", label: "Subtítulo del CTA", type: "text" },
-      { key: "ctaButtonText", label: "Texto del botón", type: "text" },
-    ],
-  },
-  {
     id: "transparency",
-    label: "Transparencia",
+    label: "Sección transparencia",
     fields: [
       { key: "transparencyTitle", label: "Título", type: "text" },
       { key: "transparencySubtitle", label: "Subtítulo", type: "textarea" },
@@ -61,9 +48,8 @@ const sections: SettingsSection[] = [
   },
   {
     id: "contact",
-    label: "Contacto y redes",
+    label: "Contacto y redes sociales",
     fields: [
-      { key: "contactAddress", label: "Dirección", type: "text" },
       { key: "contactEmail", label: "Email de contacto", type: "text" },
       { key: "contactPhone", label: "Teléfono", type: "text" },
       { key: "socialFacebook", label: "Facebook URL", type: "url" },
@@ -74,7 +60,7 @@ const sections: SettingsSection[] = [
   },
   {
     id: "visibility",
-    label: "Visibilidad de secciones",
+    label: "Visibilidad de secciones opcionales",
     fields: [
       { key: "showMembershipSection", label: "Mostrar sección «Hazte socio/a»", type: "toggle" },
       { key: "showTransparencySection", label: "Mostrar sección «Transparencia»", type: "toggle" },
@@ -82,12 +68,12 @@ const sections: SettingsSection[] = [
   },
   {
     id: "flow",
-    label: "Configuración Flow (Pagos)",
+    label: "Integración Flow (Pagos)",
     fields: [
       { key: "flowApiKey", label: "Flow API Key", type: "text" },
       { key: "flowSecretKey", label: "Flow Secret Key", type: "text" },
-      { key: "flowReturnUrl", label: "URL de retorno", type: "url" },
-      { key: "flowConfirmUrl", label: "URL de confirmación (webhook)", type: "url" },
+      { key: "flowReturnUrl", label: "URL de retorno tras pago", type: "url" },
+      { key: "flowConfirmUrl", label: "URL webhook de confirmación", type: "url" },
     ],
   },
 ];
