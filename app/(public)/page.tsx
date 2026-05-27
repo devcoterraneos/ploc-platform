@@ -1,5 +1,4 @@
 import LandingHero from "@/components/landing/LandingHero";
-import LandingMetrics from "@/components/landing/LandingMetrics";
 import LandingProjects from "@/components/landing/LandingProjects";
 import LandingTestimonial from "@/components/landing/LandingTestimonial";
 import LandingMembership from "@/components/landing/LandingMembership";
@@ -8,11 +7,8 @@ import LandingTransparency from "@/components/landing/LandingTransparency";
 export default function HomePage() {
   return (
     <>
-      {/* Hero + campaña activa */}
+      {/* Hero limpio */}
       <LandingHero />
-
-      {/* Métricas de impacto */}
-      <LandingMetrics />
 
       {/* Proyectos destacados + modal de donación */}
       <LandingProjects />
