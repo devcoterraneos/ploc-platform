@@ -22,10 +22,22 @@ function ProjectCard({
     <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
       <div
         className="h-44 w-full relative flex items-end p-4"
-        style={{ background: project.imageGradient }}
+        style={
+          project.imageUrl
+            ? {
+                backgroundImage: `url(${project.imageUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : { background: project.imageGradient }
+        }
       >
+        {/* Dark overlay so the badge is always legible over photos */}
+        {project.imageUrl && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
+        )}
         <span
-          className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide"
+          className="relative text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide"
           style={{ backgroundColor: project.categoryBg, color: project.categoryColor }}
         >
           {project.category}
