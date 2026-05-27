@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Heart, ArrowLeft, ChevronRight, Check, Target, Wrench, TrendingUp } from "lucide-react";
+import { X, Heart, ArrowLeft, ChevronRight, Check, Target, Wrench } from "lucide-react";
 import { formatCLP } from "@/lib/data";
 
 export interface ProjectForModal {
@@ -91,7 +91,7 @@ function InfoSection({
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">{title}</p>
+        <p className="text-xs font-bold text-[#8B1A1A] uppercase tracking-wide mb-1">{title}</p>
         <p className="text-sm text-gray-700 leading-relaxed">{children}</p>
       </div>
     </div>
@@ -105,9 +105,6 @@ function Step1({
   project: ProjectForModal;
   onNext: () => void;
 }) {
-  const pct = Math.min(Math.round((project.raised / project.goal) * 100), 100);
-  const remaining = project.goal - project.raised;
-
   return (
     <div>
       {/* Project header: circular image + title */}
@@ -143,17 +140,6 @@ function Step1({
           {project.resourcesUse}
         </InfoSection>
 
-        <InfoSection
-          icon={<TrendingUp className="w-4 h-4" />}
-          title="¿Cuánto falta?"
-        >
-          <span className="font-bold text-[#8B1A1A]">{formatCLP(remaining)}</span>{" "}
-          para alcanzar la meta de {formatCLP(project.goal)}
-          <ProgressBar value={pct} className="mt-2.5" />
-          <span className="text-xs text-gray-400 mt-1 block">
-            {formatCLP(project.raised)} recaudado · {pct}% completado
-          </span>
-        </InfoSection>
       </div>
 
       <button

@@ -1,17 +1,17 @@
-/**
+﻿/**
  * landing-config.ts
- * ─────────────────────────────────────────────────────────────────────────────
- * CONFIGURACIÓN CENTRAL WHITELABEL
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ * CONFIGURACIÃ“N CENTRAL WHITELABEL
  *
- * Para adaptar esta landing a otra organización, edita solo este archivo.
- * Todos los componentes de landing leen desde aquí.
- * ─────────────────────────────────────────────────────────────────────────────
+ * Para adaptar esta landing a otra organizaciÃ³n, edita solo este archivo.
+ * Todos los componentes de landing leen desde aquÃ­.
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
-// ─── Organización ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ OrganizaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const org = {
-  name: "Corporación PLOC",
+  name: "CorporaciÃ³n PLOC",
   tagline: "Plan Puerto Octay",
   territory: "Puerto Octay",
   logo: "/images/logo-ploc.png",
@@ -20,7 +20,7 @@ export const org = {
   primaryHover: "#7A1616",
   email: "contacto@corporacionploc.org",
   phone: "(56) 9 9733 5142",
-  address: "Puerto Octay, Región de Los Lagos, Chile",
+  address: "Puerto Octay, RegiÃ³n de Los Lagos, Chile",
   footerDescription:
     "Conectamos personas, ideas y recursos para impulsar proyectos que fortalecen la vida local del sur de Chile.",
   social: {
@@ -29,28 +29,28 @@ export const org = {
     youtube: "",
     linkedin: "https://www.linkedin.com/company/corporacion-ploc",
   },
-  copyright: `© ${new Date().getFullYear()} Corporación PLOC. Todos los derechos reservados.`,
+  copyright: `Â© ${new Date().getFullYear()} CorporaciÃ³n PLOC. Todos los derechos reservados.`,
 };
 
-// ─── Hero ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const hero = {
   image: "/images/hero-puerto-octay.jpg",
-  imageAlt: "Volcán Osorno y Lago Llanquihue desde Puerto Octay",
+  imageAlt: "VolcÃ¡n Osorno y Lago Llanquihue desde Puerto Octay",
   titleLine1: "Juntos construimos",
   titleLine2: "el futuro de nuestro",
   titleHighlight: "territorio",
   subtitle:
-    "Tu apoyo impulsa proyectos que mejoran la calidad de vida y cuidan lo que nos hace únicos.",
+    "Tu apoyo impulsa proyectos que mejoran la calidad de vida y cuidan lo que nos hace Ãºnicos.",
   ctaPrimary: "Donar ahora",
   ctaSecondary: "Conoce los proyectos",
 };
 
-// ─── Campaña activa ───────────────────────────────────────────────────────────
+// â”€â”€â”€ CampaÃ±a activa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const activeCampaign = {
   id: "fondo-comunidad-2024",
-  label: "CAMPAÑA ACTIVA",
+  label: "CAMPAÃ‘A ACTIVA",
   name: "Fondo Comunidad PLOC",
   description: "Transformemos juntos Puerto Octay",
   goal: 30000000,
@@ -59,7 +59,7 @@ export const activeCampaign = {
   ctaText: "Quiero aportar",
 };
 
-// ─── Proyectos destacados ─────────────────────────────────────────────────────
+// â”€â”€â”€ Proyectos destacados â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const featuredProjects = [
   {
@@ -71,10 +71,14 @@ export const featuredProjects = [
     name: "Ruta Patrimonial Puerto Octay",
     description:
       "Puesta en valor de nuestra historia, arquitectura y oficios tradicionales del sur de Chile.",
+    objective:
+      "Conectar y poner en valor los principales hitos patrimoniales de Puerto Octay, creando una experiencia cultural Ãºnica para residentes y visitantes que fortalezca la identidad local.",
+    resourcesUse:
+      "SeÃ±alÃ©tica patrimonial, materiales interpretativos, formaciÃ³n de guÃ­as locales y restauraciÃ³n de fachadas histÃ³ricas.",
     goal: 9000000,
     raised: 6480000,
     imageGradient: "linear-gradient(135deg, #92400E 0%, #B45309 100%)",
-    donationAmounts: [5000, 10000, 25000],
+    donationAmounts: [5000, 10000, 25000, 50000],
   },
   {
     id: "escuela-musica",
@@ -82,13 +86,17 @@ export const featuredProjects = [
     category: "Cultura",
     categoryColor: "#5B21B6",
     categoryBg: "#EDE9FE",
-    name: "Escuela de Música Comunitaria",
+    name: "Escuela de MÃºsica Comunitaria",
     description:
-      "Formación musical gratuita para niñas, niños y jóvenes de la comuna y sectores rurales aledaños.",
+      "FormaciÃ³n musical gratuita para niÃ±as, niÃ±os y jÃ³venes de la comuna y sectores rurales aledaÃ±os.",
+    objective:
+      "Ofrecer formaciÃ³n musical gratuita y de calidad a niÃ±as, niÃ±os y jÃ³venes de Puerto Octay, fortaleciendo la identidad cultural local a travÃ©s de la mÃºsica.",
+    resourcesUse:
+      "Instrumentos musicales, arriendo de espacio, honorarios de profesores y materiales pedagÃ³gicos para clases semanales.",
     goal: 7500000,
     raised: 4320000,
     imageGradient: "linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%)",
-    donationAmounts: [5000, 10000, 25000],
+    donationAmounts: [5000, 10000, 25000, 50000],
   },
   {
     id: "parque-costero",
@@ -98,15 +106,19 @@ export const featuredProjects = [
     categoryBg: "#D1FAE5",
     name: "Parque Costero Sostenible",
     description:
-      "Mejoramos espacios públicos del borde lacustre y promovemos el turismo responsable.",
+      "Mejoramos espacios pÃºblicos del borde lacustre y promovemos el turismo responsable.",
+    objective:
+      "Recuperar y mejorar el borde lacustre del lago Llanquihue como espacio pÃºblico de uso comunitario, promoviendo el turismo responsable y la educaciÃ³n ambiental.",
+    resourcesUse:
+      "Pasarelas de madera nativa, seÃ±alÃ©tica ambiental, Ã¡reas de picnic, senderos interpretativos y infraestructura de acceso.",
     goal: 12500000,
     raised: 7950000,
     imageGradient: "linear-gradient(135deg, #065F46 0%, #059669 100%)",
-    donationAmounts: [5000, 10000, 25000],
+    donationAmounts: [5000, 10000, 25000, 50000],
   },
 ];
 
-// ─── Métricas de impacto ──────────────────────────────────────────────────────
+// â”€â”€â”€ MÃ©tricas de impacto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const impactStats = [
   { value: "27", label: "Proyectos apoyados", sub: "desde 2021" },
@@ -115,17 +127,17 @@ export const impactStats = [
   { value: "312", label: "Aportes recurrentes", sub: "cada mes" },
 ];
 
-// ─── Testimonio ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Testimonio â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const testimonial = {
   quote:
-    "Cuando trabajamos juntos, nuestro territorio florece. Gracias a cada persona que confía y aporta.",
-  name: "María Angélica Mansilla",
+    "Cuando trabajamos juntos, nuestro territorio florece. Gracias a cada persona que confÃ­a y aporta.",
+  name: "MarÃ­a AngÃ©lica Mansilla",
   role: "Vecina y voluntaria",
   initials: "MA",
 };
 
-// ─── Membresía / Socios ───────────────────────────────────────────────────────
+// â”€â”€â”€ MembresÃ­a / Socios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const membership = {
   title: "Hazte socio/a",
@@ -136,15 +148,15 @@ export const membership = {
   ctaText: "Quiero ser socio/a",
 };
 
-// ─── Transparencia ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Transparencia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const transparency = {
   title: "Transparencia que genera confianza",
-  subtitle: "Así distribuimos los recursos para maximizar el impacto en el territorio.",
+  subtitle: "AsÃ­ distribuimos los recursos para maximizar el impacto en el territorio.",
   items: [
-    { pct: 70, label: "Proyectos", icon: "🌱" },
-    { pct: 15, label: "Fortalecimiento comunitario", icon: "🤝" },
-    { pct: 10, label: "Gestión y administración", icon: "⚙️" },
-    { pct: 5, label: "Comunicación y difusión", icon: "📣" },
+    { pct: 70, label: "Proyectos", icon: "ðŸŒ±" },
+    { pct: 15, label: "Fortalecimiento comunitario", icon: "ðŸ¤" },
+    { pct: 10, label: "GestiÃ³n y administraciÃ³n", icon: "âš™ï¸" },
+    { pct: 5, label: "ComunicaciÃ³n y difusiÃ³n", icon: "ðŸ“£" },
   ],
 };
