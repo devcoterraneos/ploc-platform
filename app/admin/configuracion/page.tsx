@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Save, ChevronDown, ChevronUp } from "lucide-react";
 import { defaultSiteSettings } from "@/lib/data";
+import { persistSettings } from "@/lib/settings-context";
 
 type SettingsSection = {
   id: string;
@@ -113,7 +114,8 @@ export default function ConfiguracionAdminPage() {
   };
 
   const handleSave = () => {
-    // TODO: persist to Supabase site_settings table
+    persistSettings(settings);          // guarda en localStorage → landing lo lee
+    // TODO: también persistir en Supabase site_settings cuando esté conectado
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

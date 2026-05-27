@@ -1,14 +1,15 @@
+"use client";
+
 import Image from "next/image";
 import { Heart } from "lucide-react";
-import { defaultSiteSettings } from "@/lib/data";
+import { useSettings } from "@/lib/settings-context";
 
 export default function LandingHero() {
-  const s = defaultSiteSettings;
+  const s = useSettings();
   const titleLines = s.heroTitle.split("\n");
 
   return (
     <section id="inicio" className="relative overflow-hidden min-h-[500px] lg:min-h-[580px]">
-      {/* Background photo */}
       <div className="absolute inset-0">
         <Image
           src={s.heroImageUrl}
@@ -23,7 +24,6 @@ export default function LandingHero() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
       </div>
 
-      {/* Content */}
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
         <div className="max-w-2xl">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
@@ -33,7 +33,7 @@ export default function LandingHero() {
                 {i < titleLines.length - 1 && <br />}
               </span>
             ))}{" "}
-            <span className="text-[#8B1A1A]">{s.heroHighlight}</span>
+            <span style={{ color: s.primaryColor }}>{s.heroHighlight}</span>
           </h1>
 
           <p className="text-gray-600 text-lg mb-10 leading-relaxed max-w-lg">
@@ -42,7 +42,8 @@ export default function LandingHero() {
 
           <a
             href="#proyectos"
-            className="inline-flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white font-bold px-8 py-4 rounded-full transition-colors text-base shadow-lg shadow-red-900/25"
+            className="inline-flex items-center gap-2 text-white font-bold px-8 py-4 rounded-full transition-colors text-base shadow-lg"
+            style={{ backgroundColor: s.primaryColor }}
           >
             <Heart className="w-5 h-5 fill-white" />
             Dona a un proyecto
@@ -50,7 +51,6 @@ export default function LandingHero() {
         </div>
       </div>
 
-      {/* Photo credit */}
       <div className="absolute bottom-2 right-3">
         <span className="text-white/40 text-xs">
           © Wikimedia Commons / eurimaco — CC BY-SA 3.0

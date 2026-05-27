@@ -1,10 +1,13 @@
-import { defaultSiteSettings } from "@/lib/data";
+"use client";
+
+import { useSettings } from "@/lib/settings-context";
+
+const icons: Record<string, string> = {
+  sprout: "🌱", users: "🤝", settings: "⚙️", megaphone: "📣",
+};
 
 export default function LandingTransparency() {
-  const s = defaultSiteSettings;
-  const icons: Record<string, string> = {
-    sprout: "🌱", users: "🤝", settings: "⚙️", megaphone: "📣",
-  };
+  const s = useSettings();
 
   return (
     <div className="bg-[#F9FAFB] rounded-2xl border border-gray-100 p-8 h-full shadow-sm">
@@ -20,8 +23,8 @@ export default function LandingTransparency() {
             </div>
             <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
               <div
-                className="h-full bg-[#8B1A1A] rounded-full"
-                style={{ width: `${item.percentage}%` }}
+                className="h-full rounded-full"
+                style={{ width: `${item.percentage}%`, backgroundColor: s.primaryColor }}
               />
             </div>
             <p className="text-xs text-gray-500 leading-tight">{item.label}</p>
