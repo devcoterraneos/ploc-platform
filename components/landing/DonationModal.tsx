@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Heart, ArrowLeft, ChevronRight, Check, Target, Wrench } from "lucide-react";
 import { formatCLP } from "@/lib/data";
 
@@ -278,12 +278,43 @@ function Step3({
   onBack: () => void;
 }) {
   const isValid = form.name.trim().length >= 2 && form.email.includes("@");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleFlowClick() {
-    if (!isValid) return;
-    // TODO: conectar con /api/donate → Flow payment
-    window.location.href = "/gracias";
-  }
+  const handleFlowClick = useCallback(async () => {
+    if (!isValid || loading) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/flow/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          campaignId:   project.id,
+          campaignName: project.name,
+          donorName:    form.name,
+          donorEmail:   form.email,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.redirectUrl) {
+        setError(data.error ?? "Error al conectar con el sistema de pago. Intenta de nuevo.");
+        setLoading(false);
+        return;
+      }
+
+      // Redirect to Flow payment page
+      window.location.href = data.redirectUrl;
+
+    } catch {
+      setError("No se pudo conectar con el sistema de pago. Revisa tu conexión.");
+      setLoading(false);
+    }
+  }, [isValid, loading, amount, project, form]);
 
   return (
     <div>
@@ -339,25 +370,44 @@ function Step3({
         </div>
       </div>
 
+      {error && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-4">
+          {error}
+        </p>
+      )}
+
       <div className="flex gap-3">
         <button
           onClick={onBack}
-          className="flex items-center gap-1 px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+          disabled={loading}
+          className="flex items-center gap-1 px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver
         </button>
         <button
           onClick={handleFlowClick}
-          disabled={!isValid}
+          disabled={!isValid || loading}
           className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
-            isValid
+            isValid && !loading
               ? "bg-[#8B1A1A] hover:bg-[#7A1616] text-white shadow-lg shadow-red-900/25"
               : "bg-gray-100 text-gray-400 cursor-not-allowed"
           }`}
         >
-          <Heart className="w-4 h-4 fill-current" />
-          Ir a Donar con Flow
+          {loading ? (
+            <>
+              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+              Conectando con Flow...
+            </>
+          ) : (
+            <>
+              <Heart className="w-4 h-4 fill-current" />
+              Ir a Donar con Flow
+            </>
+          )}
         </button>
       </div>
     </div>
