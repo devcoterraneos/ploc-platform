@@ -79,6 +79,7 @@ function ProjectCard({
             resourcesUse: project.resourcesUse,
             goal: project.goal,
             raised: project.raised,
+            imageUrl: project.imageUrl,
             imageGradient: project.imageGradient,
             donationAmounts: project.donationAmounts,
             category: project.category,

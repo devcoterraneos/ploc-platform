@@ -12,6 +12,7 @@ export interface ProjectForModal {
   resourcesUse: string;
   goal: number;
   raised: number;
+  imageUrl?: string;
   imageGradient: string;
   donationAmounts: number[];
   category: string;
@@ -110,8 +111,16 @@ function Step1({
       {/* Project header: circular image + title */}
       <div className="flex items-center gap-4 mb-6">
         <div
-          className="flex-shrink-0 w-16 h-16 rounded-full shadow-md ring-2 ring-white"
-          style={{ background: project.imageGradient }}
+          className="flex-shrink-0 w-16 h-16 rounded-full shadow-md ring-2 ring-white ring-offset-1"
+          style={
+            project.imageUrl
+              ? {
+                  backgroundImage: `url(${project.imageUrl})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }
+              : { background: project.imageGradient }
+          }
         />
         <div className="min-w-0">
           <span
