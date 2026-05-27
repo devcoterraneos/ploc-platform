@@ -1,19 +1,5 @@
 "use client";
 
-/**
- * settings-context.tsx
- * ─────────────────────────────────────────────────────────────────────────────
- * Puente entre el admin y la landing.
- *
- * - El admin guarda en localStorage con persistSettings()
- * - SettingsProvider lee localStorage al montar y provee los valores
- * - useSettings() devuelve los settings activos en cualquier componente
- *
- * Cuando se conecte Supabase: reemplazar localStorage por fetch a la tabla
- * site_settings — la interfaz de useSettings() no cambia.
- * ─────────────────────────────────────────────────────────────────────────────
- */
-
 import {
   createContext,
   useContext,
@@ -23,23 +9,46 @@ import {
 } from "react";
 import { defaultSiteSettings } from "./data";
 import type { SiteSettings } from "./types";
+import supabase, { isConfigured } from "./supabase";
 
 const STORAGE_KEY = "ploc:site_settings";
-
 const SettingsContext = createContext<SiteSettings>(defaultSiteSettings);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(defaultSiteSettings);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        setSettings({ ...defaultSiteSettings, ...JSON.parse(raw) });
+    async function load() {
+      // 1. Try Supabase first
+      if (isConfigured()) {
+        try {
+          const { data, error } = await supabase
+            .from("site_settings")
+            .select("data")
+            .eq("id", 1)
+            .single();
+
+          if (!error && data?.data && Object.keys(data.data).length > 0) {
+            setSettings({ ...defaultSiteSettings, ...data.data });
+            // keep localStorage in sync as cache
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data));
+            return;
+          }
+        } catch {
+          // Supabase unavailable — fall through
+        }
       }
-    } catch {
-      // localStorage no disponible o JSON inválido — usar defaults
+
+      // 2. Fall back to localStorage cache
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) setSettings({ ...defaultSiteSettings, ...JSON.parse(raw) });
+      } catch {
+        // use defaults
+      }
     }
+
+    load();
   }, []);
 
   return (
@@ -49,16 +58,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** Hook para leer settings en cualquier componente cliente */
 export function useSettings(): SiteSettings {
   return useContext(SettingsContext);
 }
 
-/** Llamar desde el admin al guardar */
-export function persistSettings(data: Record<string, string | boolean>): void {
+/** Saves to Supabase + localStorage cache */
+export async function persistSettings(
+  data: Record<string, string | boolean>
+): Promise<void> {
+  // Always update localStorage immediately (instant UI feedback)
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    // silencioso
+  } catch { /* silent */ }
+
+  // Persist to Supabase if configured
+  if (isConfigured()) {
+    try {
+      await supabase
+        .from("site_settings")
+        .upsert({ id: 1, data, updated_at: new Date().toISOString() });
+    } catch { /* silent — localStorage is the fallback */ }
   }
 }

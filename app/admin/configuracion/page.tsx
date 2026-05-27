@@ -99,11 +99,10 @@ export default function ConfiguracionAdminPage() {
     );
   };
 
-  const handleSave = () => {
-    persistSettings(settings);          // guarda en localStorage → landing lo lee
-    // TODO: también persistir en Supabase site_settings cuando esté conectado
+  const handleSave = async () => {
+    await persistSettings(settings);   // guarda en Supabase + localStorage
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => setSaved(false), 2500);
   };
 
   return (

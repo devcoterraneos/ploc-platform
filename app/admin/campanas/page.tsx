@@ -1,27 +1,86 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Edit2, Eye, EyeOff, Star } from "lucide-react";
-import { allCampaigns, formatCLP, getProgressPercent } from "@/lib/data";
-import type { Campaign } from "@/lib/types";
+import { useState, useEffect } from "react";
+import { Plus, Edit2, Eye, EyeOff, RefreshCw, X, Save } from "lucide-react";
+import { formatCLP } from "@/lib/data";
+import supabase, { isConfigured } from "@/lib/supabase";
+
+type Campaign = {
+  id: string;
+  slug: string;
+  name: string;
+  short_description: string | null;
+  category: string | null;
+  goal: number;
+  raised: number;
+  is_featured: boolean;
+  is_active: boolean;
+  sort_order: number;
+};
+
+const emptyForm = {
+  id: "", slug: "", name: "", short_description: "",
+  category: "", goal: 1000000, raised: 0,
+  is_featured: true, is_active: true, sort_order: 0,
+};
 
 export default function CampanasAdminPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(allCampaigns);
-  const [showForm, setShowForm] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
+  const [showForm, setShowForm]   = useState(false);
+  const [editItem, setEditItem]   = useState<Partial<Campaign>>(emptyForm);
+  const [isNew, setIsNew]         = useState(true);
 
-  const statusLabel: Record<string, string> = {
-    active: "Activa",
-    paused: "Pausada",
-    finished: "Finalizada",
-    draft: "Borrador",
-  };
+  async function fetchCampaigns() {
+    if (!isConfigured()) { setLoading(false); return; }
+    setLoading(true);
+    const { data } = await supabase
+      .from("campaigns")
+      .select("id,slug,name,short_description,category,goal,raised,is_featured,is_active,sort_order")
+      .order("sort_order", { ascending: true });
+    if (data) setCampaigns(data as Campaign[]);
+    setLoading(false);
+  }
 
-  const statusColor: Record<string, string> = {
-    active: "bg-green-50 text-green-700",
-    paused: "bg-yellow-50 text-yellow-700",
-    finished: "bg-gray-100 text-gray-500",
-    draft: "bg-blue-50 text-blue-700",
-  };
+  useEffect(() => { fetchCampaigns(); }, []);
+
+  async function toggleActive(id: string, current: boolean) {
+    await supabase.from("campaigns").update({ is_active: !current, updated_at: new Date().toISOString() }).eq("id", id);
+    setCampaigns((prev) => prev.map((c) => c.id === id ? { ...c, is_active: !current } : c));
+  }
+
+  function openNew() {
+    setEditItem({ ...emptyForm, id: `camp-${Date.now()}` });
+    setIsNew(true);
+    setShowForm(true);
+  }
+
+  function openEdit(c: Campaign) {
+    setEditItem(c);
+    setIsNew(false);
+    setShowForm(true);
+  }
+
+  async function handleSave() {
+    if (!editItem.name || !editItem.goal) return;
+    setSaving(true);
+    const payload = {
+      ...editItem,
+      slug: editItem.slug || editItem.name!.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+      updated_at: new Date().toISOString(),
+    };
+    if (isNew) {
+      await supabase.from("campaigns").insert(payload);
+    } else {
+      await supabase.from("campaigns").update(payload).eq("id", editItem.id!);
+    }
+    await fetchCampaigns();
+    setSaving(false);
+    setShowForm(false);
+  }
+
+  const pct = (c: Campaign) => Math.min(Math.round((c.raised / c.goal) * 100), 100);
 
   return (
     <div>
@@ -29,153 +88,145 @@ export default function CampanasAdminPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Campañas</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Gestiona las campañas de donación de la plataforma.
+            {campaigns.filter((c) => c.is_active).length} activas · {campaigns.length} total
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Nueva campaña
-        </button>
+        <div className="flex gap-2">
+          <button onClick={fetchCampaigns} className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
+            <RefreshCw className="w-4 h-4 text-gray-500" />
+          </button>
+          <button
+            onClick={openNew}
+            className="flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva campaña
+          </button>
+        </div>
       </div>
 
-      {/* Campaigns table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50">
-                <th className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">Campaña</th>
-                <th className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">Categoría</th>
-                <th className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide hidden lg:table-cell">Progreso</th>
-                <th className="text-right px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">Recaudado</th>
-                <th className="text-center px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">Estado</th>
-                <th className="text-center px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {campaigns.map((campaign, i) => {
-                const progress = getProgressPercent(campaign.raised, campaign.goal);
-                return (
-                  <tr
-                    key={campaign.id}
-                    className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${
-                      i === campaigns.length - 1 ? "border-0" : ""
-                    }`}
-                  >
+        {loading ? (
+          <div className="flex items-center justify-center py-16 text-gray-400">
+            <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Cargando...
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/50">
+                  {["Campaña", "Categoría", "Progreso", "Recaudado", "Estado", ""].map((h) => (
+                    <th key={h} className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {campaigns.map((c, i) => (
+                  <tr key={c.id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${i === campaigns.length - 1 ? "border-0" : ""}`}>
+                    <td className="px-5 py-4">
+                      <p className="font-semibold text-gray-900">{c.name}</p>
+                      <p className="text-xs text-gray-400">/{c.slug}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                        {c.category ?? "—"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2 w-32">
+                        <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                          <div className="h-full bg-[#8B1A1A] rounded-full" style={{ width: `${pct(c)}%` }} />
+                        </div>
+                        <span className="text-xs font-bold text-[#8B1A1A]">{pct(c)}%</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="font-bold text-gray-900">{formatCLP(c.raised)}</p>
+                      <p className="text-xs text-gray-400">de {formatCLP(c.goal)}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${c.is_active ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                        {c.is_active ? "Activa" : "Inactiva"}
+                      </span>
+                    </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        {campaign.isMainCampaign && (
-                          <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500 flex-shrink-0" />
-                        )}
-                        <div>
-                          <p className="font-semibold text-gray-900">{campaign.name}</p>
-                          <p className="text-xs text-gray-400 truncate max-w-[180px]">
-                            /{campaign.slug}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 hidden md:table-cell">
-                      <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
-                        {campaign.category}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 hidden lg:table-cell">
-                      <div className="flex items-center gap-2 w-36">
-                        <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                          <div
-                            className="h-full bg-[#8B1A1A] rounded-full"
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-[#8B1A1A]">{progress}%</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <p className="font-bold text-gray-900">{formatCLP(campaign.raised)}</p>
-                      <p className="text-xs text-gray-400">de {formatCLP(campaign.goal)}</p>
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <span
-                        className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                          statusColor[campaign.status]
-                        }`}
-                      >
-                        {statusLabel[campaign.status]}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#8B1A1A] transition-colors"
-                          title="Editar"
-                        >
+                        <button onClick={() => openEdit(c)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#8B1A1A] transition-colors" title="Editar">
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => {
-                            setCampaigns((prev) =>
-                              prev.map((c) =>
-                                c.id === campaign.id
-                                  ? { ...c, status: c.status === "active" ? "paused" : "active" }
-                                  : c
-                              )
-                            );
-                          }}
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#8B1A1A] transition-colors"
-                          title={campaign.status === "active" ? "Pausar" : "Activar"}
-                        >
-                          {campaign.status === "active" ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
+                        <button onClick={() => toggleActive(c.id, c.is_active)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#8B1A1A] transition-colors" title={c.is_active ? "Desactivar" : "Activar"}>
+                          {c.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+            {campaigns.length === 0 && (
+              <div className="text-center py-12 text-gray-400">No hay campañas todavía.</div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* New campaign modal placeholder */}
+      {/* Edit / New modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Nueva campaña</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              Completa los campos para crear una nueva campaña. La conexión con Supabase
-              guardará los datos en la base de datos.
-            </p>
+          <div className="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-gray-900">{isNew ? "Nueva campaña" : "Editar campaña"}</h2>
+              <button onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-gray-100"><X className="w-4 h-4" /></button>
+            </div>
             <div className="space-y-3">
-              {["Nombre de la campaña", "Categoría", "Meta ($)", "Descripción"].map((field) => (
-                <div key={field}>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">{field}</label>
-                  <input
-                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A]"
-                    placeholder={field}
-                  />
+              {[
+                { key: "name",              label: "Nombre *",          type: "text" },
+                { key: "slug",              label: "Slug (URL)",         type: "text" },
+                { key: "category",          label: "Categoría",          type: "text" },
+                { key: "short_description", label: "Descripción corta",  type: "textarea" },
+                { key: "goal",              label: "Meta ($)",           type: "number" },
+                { key: "raised",            label: "Recaudado ($)",      type: "number" },
+                { key: "sort_order",        label: "Orden (1, 2, 3...)", type: "number" },
+              ].map((f) => (
+                <div key={f.key}>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{f.label}</label>
+                  {f.type === "textarea" ? (
+                    <textarea
+                      rows={2}
+                      value={String((editItem as Record<string, unknown>)[f.key] ?? "")}
+                      onChange={(e) => setEditItem((p) => ({ ...p, [f.key]: e.target.value }))}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A] resize-none"
+                    />
+                  ) : (
+                    <input
+                      type={f.type}
+                      value={String((editItem as Record<string, unknown>)[f.key] ?? "")}
+                      onChange={(e) => setEditItem((p) => ({ ...p, [f.key]: f.type === "number" ? Number(e.target.value) : e.target.value }))}
+                      className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A]"
+                    />
+                  )}
                 </div>
               ))}
+              <div className="flex items-center gap-3 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={!!editItem.is_featured} onChange={(e) => setEditItem((p) => ({ ...p, is_featured: e.target.checked }))} className="accent-[#8B1A1A]" />
+                  <span className="text-sm text-gray-600">Destacada en landing</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={!!editItem.is_active} onChange={(e) => setEditItem((p) => ({ ...p, is_active: e.target.checked }))} className="accent-[#8B1A1A]" />
+                  <span className="text-sm text-gray-600">Activa</span>
+                </label>
+              </div>
             </div>
-            <div className="flex gap-3 mt-5">
-              <button
-                onClick={() => setShowForm(false)}
-                className="flex-1 py-2.5 text-sm font-medium border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-              >
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 text-sm font-medium border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                 Cancelar
               </button>
-              <button
-                onClick={() => setShowForm(false)}
-                className="flex-1 py-2.5 text-sm font-bold bg-[#8B1A1A] text-white rounded-xl hover:bg-[#7A1616] transition-colors"
-              >
-                Guardar campaña
+              <button onClick={handleSave} disabled={saving} className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold bg-[#8B1A1A] text-white rounded-xl hover:bg-[#7A1616] transition-colors disabled:opacity-60">
+                <Save className="w-4 h-4" />
+                {saving ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </div>

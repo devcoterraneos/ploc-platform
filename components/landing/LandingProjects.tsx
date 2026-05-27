@@ -1,18 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import { featuredProjects } from "@/lib/landing-config";
 import { formatCLP } from "@/lib/data";
 import { useSettings } from "@/lib/settings-context";
+import supabase, { isConfigured } from "@/lib/supabase";
 import DonationModal, { type ProjectForModal } from "./DonationModal";
+
+type Project = (typeof featuredProjects)[0];
+
+function ProjectCardSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm animate-pulse">
+      <div className="h-44 bg-gray-200" />
+      <div className="p-5 space-y-3">
+        <div className="h-4 bg-gray-200 rounded w-3/4" />
+        <div className="h-3 bg-gray-100 rounded w-full" />
+        <div className="h-3 bg-gray-100 rounded w-5/6" />
+        <div className="h-2 bg-gray-200 rounded-full mt-4" />
+        <div className="h-10 bg-gray-200 rounded-xl mt-2" />
+      </div>
+    </div>
+  );
+}
 
 function ProjectCard({
   project,
   primaryColor,
   onDonate,
 }: {
-  project: (typeof featuredProjects)[0];
+  project: Project;
   primaryColor: string;
   onDonate: (p: ProjectForModal) => void;
 }) {
@@ -32,7 +50,6 @@ function ProjectCard({
             : { background: project.imageGradient }
         }
       >
-        {/* Dark overlay so the badge is always legible over photos */}
         {project.imageUrl && (
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
         )}
@@ -74,17 +91,17 @@ function ProjectCard({
           onClick={() => onDonate({
             id: project.id,
             name: project.name,
-            description: project.description,
-            objective: project.objective,
-            resourcesUse: project.resourcesUse,
+            description: project.description ?? "",
+            objective: project.objective ?? "",
+            resourcesUse: project.resourcesUse ?? "",
             goal: project.goal,
             raised: project.raised,
             imageUrl: project.imageUrl,
-            imageGradient: project.imageGradient,
+            imageGradient: project.imageGradient ?? "",
             donationAmounts: project.donationAmounts,
-            category: project.category,
-            categoryColor: project.categoryColor,
-            categoryBg: project.categoryBg,
+            category: project.category ?? "",
+            categoryColor: project.categoryColor ?? "#8B1A1A",
+            categoryBg: project.categoryBg ?? "#FEF3C7",
           })}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-semibold transition-colors"
           style={{ backgroundColor: primaryColor }}
@@ -97,9 +114,48 @@ function ProjectCard({
   );
 }
 
+// Map Supabase row → Project shape
+function rowToProject(row: Record<string, unknown>): Project {
+  return {
+    id:             String(row.id ?? ""),
+    slug:           String(row.slug ?? ""),
+    category:       String(row.category ?? ""),
+    categoryColor:  String(row.category_color ?? "#8B1A1A"),
+    categoryBg:     String(row.category_bg ?? "#FEF3C7"),
+    name:           String(row.name ?? ""),
+    description:    String(row.short_description ?? ""),
+    objective:      String(row.objective ?? ""),
+    resourcesUse:   String(row.resources_use ?? ""),
+    goal:           Number(row.goal ?? 0),
+    raised:         Number(row.raised ?? 0),
+    imageUrl:       row.image_url ? String(row.image_url) : "",
+    imageGradient:  String(row.image_gradient ?? "linear-gradient(135deg,#8B1A1A,#B45309)"),
+    donationAmounts: (row.donation_amounts as number[]) ?? [5000, 10000, 25000, 50000],
+  };
+}
+
 export default function LandingProjects() {
+  const [projects, setProjects] = useState<Project[]>(featuredProjects);
+  const [loading, setLoading]   = useState(isConfigured());
   const [activeProject, setActiveProject] = useState<ProjectForModal | null>(null);
   const s = useSettings();
+
+  useEffect(() => {
+    if (!isConfigured()) return;
+
+    supabase
+      .from("campaigns")
+      .select("*")
+      .eq("is_featured", true)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setProjects(data.map(rowToProject));
+        }
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <section id="proyectos" className="py-16 lg:py-20 bg-[#F9FAFB]">
@@ -117,14 +173,16 @@ export default function LandingProjects() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredProjects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              primaryColor={s.primaryColor}
-              onDonate={setActiveProject}
-            />
-          ))}
+          {loading
+            ? [1, 2, 3].map((i) => <ProjectCardSkeleton key={i} />)
+            : projects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  primaryColor={s.primaryColor}
+                  onDonate={setActiveProject}
+                />
+              ))}
         </div>
       </div>
 
