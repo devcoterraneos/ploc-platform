@@ -1,15 +1,18 @@
 import Image from "next/image";
 import { Heart } from "lucide-react";
-import { hero } from "@/lib/landing-config";
+import { defaultSiteSettings } from "@/lib/data";
 
 export default function LandingHero() {
+  const s = defaultSiteSettings;
+  const titleLines = s.heroTitle.split("\n");
+
   return (
     <section id="inicio" className="relative overflow-hidden min-h-[500px] lg:min-h-[580px]">
       {/* Background photo */}
       <div className="absolute inset-0">
         <Image
-          src={hero.image}
-          alt={hero.imageAlt}
+          src={s.heroImageUrl}
+          alt="Vista territorial"
           fill
           priority
           className="object-cover object-center"
@@ -20,18 +23,21 @@ export default function LandingHero() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
       </div>
 
-      {/* Content — centered left, no card */}
+      {/* Content */}
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
         <div className="max-w-2xl">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
-            {hero.titleLine1}
-            <br />
-            {hero.titleLine2}{" "}
-            <span className="text-[#8B1A1A]">{hero.titleHighlight}</span>
+            {titleLines.map((line, i) => (
+              <span key={i}>
+                {line}
+                {i < titleLines.length - 1 && <br />}
+              </span>
+            ))}{" "}
+            <span className="text-[#8B1A1A]">{s.heroHighlight}</span>
           </h1>
 
           <p className="text-gray-600 text-lg mb-10 leading-relaxed max-w-lg">
-            {hero.subtitle}
+            {s.heroSubtitle}
           </p>
 
           <a

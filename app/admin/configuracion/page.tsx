@@ -7,7 +7,7 @@ import { defaultSiteSettings } from "@/lib/data";
 type SettingsSection = {
   id: string;
   label: string;
-  fields: { key: string; label: string; type: "text" | "textarea" | "color" | "number" | "url" }[];
+  fields: { key: string; label: string; type: "text" | "textarea" | "color" | "number" | "url" | "toggle" }[];
 };
 
 const sections: SettingsSection[] = [
@@ -72,6 +72,14 @@ const sections: SettingsSection[] = [
     ],
   },
   {
+    id: "visibility",
+    label: "Visibilidad de secciones",
+    fields: [
+      { key: "showMembershipSection", label: "Mostrar sección «Hazte socio/a»", type: "toggle" },
+      { key: "showTransparencySection", label: "Mostrar sección «Transparencia»", type: "toggle" },
+    ],
+  },
+  {
     id: "flow",
     label: "Configuración Flow (Pagos)",
     fields: [
@@ -84,14 +92,16 @@ const sections: SettingsSection[] = [
 ];
 
 export default function ConfiguracionAdminPage() {
-  const [settings, setSettings] = useState<Record<string, string>>({
+  const [settings, setSettings] = useState<Record<string, string | boolean>>({
     ...defaultSiteSettings,
     heroTitle: defaultSiteSettings.heroTitle,
+    showMembershipSection: defaultSiteSettings.showMembershipSection,
+    showTransparencySection: defaultSiteSettings.showTransparencySection,
     flowApiKey: "",
     flowSecretKey: "",
     flowReturnUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/gracias`,
     flowConfirmUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/api/flow/webhook`,
-  } as unknown as Record<string, string>);
+  } as unknown as Record<string, string | boolean>);
 
   const [openSections, setOpenSections] = useState<string[]>(["hero"]);
   const [saved, setSaved] = useState(false);
@@ -162,14 +172,36 @@ export default function ConfiguracionAdminPage() {
                   )}
                   <div className="grid md:grid-cols-2 gap-4">
                     {section.fields.map((field) => (
-                      <div key={field.key} className={field.type === "textarea" ? "md:col-span-2" : ""}>
+                      <div key={field.key} className={field.type === "textarea" || field.type === "toggle" ? "md:col-span-2" : ""}>
                         <label className="block text-xs font-medium text-gray-700 mb-1.5">
                           {field.label}
                         </label>
-                        {field.type === "textarea" ? (
+                        {field.type === "toggle" ? (
+                          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <span className="text-sm text-gray-600">{field.label}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSettings((prev) => ({
+                                  ...prev,
+                                  [field.key]: !prev[field.key],
+                                }))
+                              }
+                              className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                                settings[field.key] ? "bg-[#8B1A1A]" : "bg-gray-300"
+                              }`}
+                            >
+                              <span
+                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                                  settings[field.key] ? "translate-x-5" : "translate-x-0"
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        ) : field.type === "textarea" ? (
                           <textarea
                             rows={3}
-                            value={settings[field.key] ?? ""}
+                            value={(settings[field.key] as string) ?? ""}
                             onChange={(e) =>
                               setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
                             }
@@ -179,7 +211,7 @@ export default function ConfiguracionAdminPage() {
                           <div className="flex items-center gap-2">
                             <input
                               type="color"
-                              value={settings[field.key] ?? "#8B1A1A"}
+                              value={(settings[field.key] as string) ?? "#8B1A1A"}
                               onChange={(e) =>
                                 setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
                               }
@@ -187,7 +219,7 @@ export default function ConfiguracionAdminPage() {
                             />
                             <input
                               type="text"
-                              value={settings[field.key] ?? ""}
+                              value={(settings[field.key] as string) ?? ""}
                               onChange={(e) =>
                                 setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
                               }
@@ -197,7 +229,7 @@ export default function ConfiguracionAdminPage() {
                         ) : (
                           <input
                             type={field.type}
-                            value={settings[field.key] ?? ""}
+                            value={(settings[field.key] as string) ?? ""}
                             onChange={(e) =>
                               setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
                             }

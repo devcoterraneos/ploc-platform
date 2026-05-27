@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { featuredProjects } from "@/lib/landing-config";
-import { formatCLP } from "@/lib/data";
+import { formatCLP, defaultSiteSettings } from "@/lib/data";
 import DonationModal, { type ProjectForModal } from "./DonationModal";
 
 function ProjectCard({
@@ -62,13 +62,13 @@ function ProjectCard({
           <span className="font-normal text-gray-400">recaudado</span>
         </p>
 
-        {/* CTA */}
+        {/* CTA — burdeo sólido */}
         <button
           onClick={() => onDonate(project)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-50 hover:bg-[#8B1A1A] hover:text-white border border-gray-200 hover:border-[#8B1A1A] text-sm font-semibold text-gray-700 transition-all group/btn"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#8B1A1A] hover:bg-[#7A1616] text-white text-sm font-semibold transition-colors"
         >
           Apoyar este proyecto
-          <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -77,21 +77,19 @@ function ProjectCard({
 
 export default function LandingProjects() {
   const [activeProject, setActiveProject] = useState<ProjectForModal | null>(null);
+  const s = defaultSiteSettings;
 
   return (
     <section id="proyectos" className="py-16 lg:py-20 bg-[#F9FAFB]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <p className="text-xs font-bold text-[#8B1A1A] tracking-widest uppercase mb-2">
-              Proyectos destacados
-            </p>
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">
-              Iniciativas que transforman
-              <br className="hidden sm:block" /> nuestro territorio
-            </h2>
-          </div>
+        <div className="mb-10">
+          <p className="text-xs font-bold text-[#8B1A1A] tracking-widest uppercase mb-2">
+            {s.projectsSectionSubtitle}
+          </p>
+          <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">
+            {s.projectsSectionTitle}
+          </h2>
         </div>
 
         {/* Grid */}

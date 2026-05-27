@@ -171,6 +171,8 @@ export interface SiteSettings {
   socialYoutube: string;
   socialLinkedin: string;
   footerDescription: string;
+  showMembershipSection: boolean;
+  showTransparencySection: boolean;
 }
 
 export interface TransparencyItem {

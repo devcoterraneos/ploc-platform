@@ -80,9 +80,9 @@ export const defaultSiteSettings: SiteSettings = {
   primaryColor: "#8B1A1A",
   secondaryColor: "#111827",
   heroImageUrl: "/images/hero-puerto-octay.jpg",
-  heroTitle: "Impulsamos el futuro\nde ",
-  heroHighlight: "Puerto Octay",
-  heroSubtitle: "desde su propio territorio",
+  heroTitle: "Juntos construimos\nel futuro de nuestro",
+  heroHighlight: "territorio",
+  heroSubtitle: "Tu apoyo impulsa proyectos que mejoran la calidad de vida y cuidan lo que nos hace únicos.",
   heroCommunityCount: "846",
   heroCommunityText: "personas que ya apoyan a Puerto Octay",
   heroDonarText: "Donar ahora",
@@ -113,6 +113,8 @@ export const defaultSiteSettings: SiteSettings = {
   socialLinkedin: "https://www.linkedin.com/company/corporacion-ploc",
   footerDescription:
     "Conectamos personas, ideas y recursos para impulsar proyectos que fortalecen la vida local del sur de Chile.",
+  showMembershipSection: true,
+  showTransparencySection: true,
 };
 
 // ─── Campaigns / Projects ─────────────────────────────────────────────────────
