@@ -15,40 +15,38 @@ const STORAGE_KEY = "ploc:site_settings";
 const SettingsContext = createContext<SiteSettings>(defaultSiteSettings);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<SiteSettings>(defaultSiteSettings);
-
-  useEffect(() => {
-    async function load() {
-      // 1. Try Supabase first
-      if (isConfigured()) {
-        try {
-          const { data, error } = await supabase
-            .from("site_settings")
-            .select("data")
-            .eq("id", 1)
-            .single();
-
-          if (!error && data?.data && Object.keys(data.data).length > 0) {
-            setSettings({ ...defaultSiteSettings, ...data.data });
-            // keep localStorage in sync as cache
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data));
-            return;
-          }
-        } catch {
-          // Supabase unavailable — fall through
+  // Lazy initializer: reads localStorage synchronously before the first render,
+  // so components never paint the hardcoded defaults when cached settings exist.
+  // typeof window guard prevents errors during static build / SSR.
+  const [settings, setSettings] = useState<SiteSettings>(() => {
+    if (typeof window === "undefined") return defaultSiteSettings;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          return { ...defaultSiteSettings, ...parsed };
         }
       }
+    } catch { /* no cache yet */ }
+    return defaultSiteSettings;
+  });
 
-      // 2. Fall back to localStorage cache
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) setSettings({ ...defaultSiteSettings, ...JSON.parse(raw) });
-      } catch {
-        // use defaults
-      }
-    }
-
-    load();
+  // Background sync with Supabase — localStorage already loaded above
+  useEffect(() => {
+    if (!isConfigured()) return;
+    supabase
+      .from("site_settings")
+      .select("data")
+      .eq("id", 1)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data?.data && Object.keys(data.data).length > 0) {
+          setSettings({ ...defaultSiteSettings, ...data.data });
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data));
+        }
+      })
+      .catch(() => { /* Supabase unavailable — localStorage state is fine */ });
   }, []);
 
   return (
