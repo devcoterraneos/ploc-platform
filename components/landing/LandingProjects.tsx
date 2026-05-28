@@ -114,7 +114,11 @@ function rowToProject(row: Record<string, unknown>): Project {
     resourcesUse:   String(row.resources_use ?? ""),
     goal:           Number(row.goal ?? 0),
     raised:         Number(row.raised ?? 0),
-    imageUrl:       row.image_url ? String(row.image_url) : "",
+    imageUrl:       (() => {
+      const imgs = row.images as { url: string; isPrimary: boolean }[] | null;
+      const primary = imgs?.find(i => i.isPrimary)?.url ?? imgs?.[0]?.url;
+      return primary ?? (row.image_url ? String(row.image_url) : "");
+    })(),
     imageGradient:  String(row.image_gradient ?? "linear-gradient(135deg,#8B1A1A,#B45309)"),
     donationAmounts: (row.donation_amounts as number[]) ?? [5000, 10000, 25000, 50000],
   };

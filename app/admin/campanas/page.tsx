@@ -22,6 +22,7 @@ type Campaign = {
   image_url: string | null;
   image_gradient: string | null;
   donation_amounts: number[] | null;
+  images: { url: string; isPrimary: boolean }[] | null;
 };
 
 const emptyForm: Partial<Campaign> = {
@@ -41,6 +42,7 @@ const emptyForm: Partial<Campaign> = {
   image_url: "",
   image_gradient: "linear-gradient(135deg,#8B1A1A,#B45309)",
   donation_amounts: [5000, 10000, 25000, 50000],
+  images: null,
 };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -71,11 +73,11 @@ export default function CampanasAdminPage() {
   const [showForm, setShowForm]             = useState(false);
   const [editItem, setEditItem]             = useState<Partial<Campaign>>(emptyForm);
   const [isNew, setIsNew]                   = useState(true);
-  const [imageFile, setImageFile]           = useState<File | null>(null);
-  const [imagePreview, setImagePreview]     = useState<string>("");
+  const [formImages, setFormImages]         = useState<{ url: string; isPrimary: boolean }[]>([]);
+  const [pendingFiles, setPendingFiles]     = useState<{ file: File; preview: string }[]>([]);
   const [confirmDelete, setConfirmDelete]   = useState<string | null>(null);
   const [saveError, setSaveError]           = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const multiFileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Data ──────────────────────────────────────────────────────────────────
   async function fetchCampaigns() {
@@ -83,7 +85,7 @@ export default function CampanasAdminPage() {
     setLoading(true);
     const { data } = await supabase
       .from("campaigns")
-      .select("id,slug,name,short_description,objective,resources_use,category,category_color,category_bg,goal,raised,status,sort_order,image_url,image_gradient,donation_amounts")
+      .select("id,slug,name,short_description,objective,resources_use,category,category_color,category_bg,goal,raised,status,sort_order,image_url,image_gradient,donation_amounts,images")
       .order("sort_order", { ascending: true });
     if (data) setCampaigns(data as Campaign[]);
     setLoading(false);
@@ -99,8 +101,8 @@ export default function CampanasAdminPage() {
   function openNew() {
     setEditItem({ ...emptyForm, id: `camp-${Date.now()}` });
     setIsNew(true);
-    setImageFile(null);
-    setImagePreview("");
+    setFormImages([]);
+    setPendingFiles([]);
     setSaveError(null);
     setShowForm(true);
   }
@@ -108,19 +110,13 @@ export default function CampanasAdminPage() {
   function openEdit(c: Campaign) {
     setEditItem({ ...c });
     setIsNew(false);
-    setImageFile(null);
-    setImagePreview(c.image_url ?? "");
+    setFormImages(
+      c.images?.length ? c.images :
+      c.image_url ? [{ url: c.image_url, isPrimary: true }] : []
+    );
+    setPendingFiles([]);
     setSaveError(null);
     setShowForm(true);
-  }
-
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setImagePreview(reader.result as string);
-    reader.readAsDataURL(file);
   }
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -130,17 +126,24 @@ export default function CampanasAdminPage() {
     setSaveError(null);
 
     try {
-      let imageUrl = editItem.image_url ?? "";
-
-      if (imageFile) {
+      // Upload any pending new files
+      const uploaded: { url: string; isPrimary: boolean }[] = [];
+      for (const p of pendingFiles) {
         const form = new FormData();
-        form.append("file", imageFile);
+        form.append("file", p.file);
         form.append("bucket", "campaign-images");
-        const upRes = await fetch("/api/upload", { method: "POST", body: form });
-        const upData = await upRes.json();
-        if (!upRes.ok || !upData.url) throw new Error(upData.error ?? "Error subiendo imagen");
-        imageUrl = upData.url;
+        const res  = await fetch("/api/upload", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error ?? "Error subiendo imagen");
+        uploaded.push({ url: data.url, isPrimary: false });
       }
+
+      // Merge existing + uploaded; guarantee one is primary
+      const allImages = [...formImages, ...uploaded];
+      if (allImages.length > 0 && !allImages.some(i => i.isPrimary)) {
+        allImages[0] = { ...allImages[0], isPrimary: true };
+      }
+      const primaryUrl = allImages.find(i => i.isPrimary)?.url ?? editItem.image_url ?? null;
 
       const slug = editItem.slug?.trim() ||
         editItem.name!
@@ -151,7 +154,8 @@ export default function CampanasAdminPage() {
       const payload = {
         ...editItem,
         slug,
-        image_url: imageUrl || null,
+        image_url: primaryUrl,
+        images:    allImages.length > 0 ? allImages : null,
         updated_at: new Date().toISOString(),
       };
 
@@ -163,8 +167,8 @@ export default function CampanasAdminPage() {
 
       await fetchCampaigns();
       setShowForm(false);
-      setImageFile(null);
-      setImagePreview("");
+      setFormImages([]);
+      setPendingFiles([]);
     } catch (err: unknown) {
       setSaveError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
@@ -360,33 +364,81 @@ export default function CampanasAdminPage() {
                 </div>
               </section>
 
-              {/* ── Imagen ── */}
+              {/* ── Imágenes del carrusel ── */}
               <section>
-                <SectionTitle>Imagen</SectionTitle>
-                <div
-                  className="border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-[#8B1A1A] transition-colors group"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {imagePreview ? (
-                    <div className="relative h-44">
-                      <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="text-white text-sm font-medium bg-black/40 px-4 py-2 rounded-full flex items-center gap-2">
-                          <ImageIcon className="w-4 h-4" /> Cambiar foto
-                        </span>
+                <SectionTitle>Imágenes del carrusel</SectionTitle>
+
+                {(formImages.length > 0 || pendingFiles.length > 0) && (
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {formImages.map((img, i) => (
+                      <div key={img.url} className="relative group rounded-lg overflow-hidden">
+                        <img src={img.url} alt="" className="w-full h-24 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setFormImages(prev => prev.map((x, j) => ({ ...x, isPrimary: j === i })))}
+                          className={`absolute top-1 left-1 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center transition-all ${
+                            img.isPrimary ? "bg-yellow-400 text-white" : "bg-black/40 text-white/70 hover:bg-yellow-400 hover:text-white"
+                          }`}
+                          title={img.isPrimary ? "Imagen principal" : "Marcar como principal"}
+                        >★</button>
+                        <button
+                          type="button"
+                          onClick={() => setFormImages(prev => prev.filter((_, j) => j !== i))}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/40 hover:bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                        >×</button>
+                        {img.isPrimary && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-yellow-400/90 text-white text-[9px] font-bold text-center py-0.5 tracking-wide">
+                            PRINCIPAL
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ) : (
-                    <div className="py-10 text-center">
-                      <ImageIcon className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm text-gray-400">Haz clic para subir una foto desde tu PC</p>
-                      <p className="text-xs text-gray-300 mt-1">JPG, PNG o WebP · máx 5 MB</p>
-                    </div>
-                  )}
-                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                </div>
-                {imageFile && (
-                  <p className="text-xs text-[#8B1A1A] mt-1.5">📎 {imageFile.name} — se subirá al guardar</p>
+                    ))}
+                    {pendingFiles.map((p, i) => (
+                      <div key={i} className="relative group rounded-lg overflow-hidden border-2 border-dashed border-[#8B1A1A]/40">
+                        <img src={p.preview} alt="" className="w-full h-24 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setPendingFiles(prev => prev.filter((_, j) => j !== i))}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/40 hover:bg-red-500 text-white text-xs flex items-center justify-center"
+                        >×</button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-[#8B1A1A]/80 text-white text-[9px] font-bold text-center py-0.5 tracking-wide">
+                          POR SUBIR
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => multiFileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-gray-200 rounded-xl py-6 text-center hover:border-[#8B1A1A] transition-colors group"
+                >
+                  <ImageIcon className="w-6 h-6 text-gray-300 group-hover:text-[#8B1A1A] mx-auto mb-1 transition-colors" />
+                  <p className="text-sm text-gray-400 group-hover:text-[#8B1A1A] transition-colors">
+                    {formImages.length + pendingFiles.length === 0 ? "Subir fotos del carrusel" : "Agregar más fotos"}
+                  </p>
+                  <p className="text-xs text-gray-300 mt-0.5">Puedes seleccionar varias a la vez · JPG, PNG, WebP</p>
+                </button>
+                <input
+                  ref={multiFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    setPendingFiles(prev => [
+                      ...prev,
+                      ...files.map(file => ({ file, preview: URL.createObjectURL(file) })),
+                    ]);
+                    e.target.value = "";
+                  }}
+                />
+                {formImages.length + pendingFiles.length > 0 && (
+                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                    ★ Toca la estrella para marcar la foto principal — esa aparece en el home y es la primera del carrusel.
+                  </p>
                 )}
               </section>
 

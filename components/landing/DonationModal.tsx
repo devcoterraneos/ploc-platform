@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, Heart, ArrowLeft, ChevronRight, Check, Target, Wrench } from "lucide-react";
+import { X, Heart, ArrowLeft, ChevronRight, Check, Wrench } from "lucide-react";
 import { formatCLP } from "@/lib/data";
 
 export interface ProjectForModal {
@@ -153,22 +153,21 @@ function Step1({
         </div>
       </div>
 
-      {/* Info sections */}
-      <div className="bg-gray-50/70 rounded-2xl border border-gray-100 px-4 mb-6 divide-y divide-gray-100">
-        <InfoSection
-          icon={<Target className="w-4 h-4" />}
-          title="¿Cuál es el Objetivo?"
-        >
-          {project.objective}
-        </InfoSection>
+      {/* Short description */}
+      {project.description && (
+        <p className="text-sm text-gray-600 leading-relaxed mb-5">
+          {project.description}
+        </p>
+      )}
 
+      {/* Info sections */}
+      <div className="bg-gray-50/70 rounded-2xl border border-gray-100 px-4 mb-6">
         <InfoSection
           icon={<Wrench className="w-4 h-4" />}
           title="¿En qué se ocuparán los recursos?"
         >
           {project.resourcesUse}
         </InfoSection>
-
       </div>
 
       <button

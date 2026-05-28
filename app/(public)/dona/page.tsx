@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  Heart, ArrowLeft, Share2,
-  Target, Wrench, Shield, CheckCircle,
+  Heart, ArrowLeft, Share2, ChevronLeft, ChevronRight,
+  Wrench, Shield, CheckCircle,
 } from "lucide-react";
 import { formatCLP } from "@/lib/data";
 import supabase from "@/lib/supabase";
@@ -26,6 +26,7 @@ type Campaign = {
   image_url: string | null;
   image_gradient: string | null;
   donation_amounts: number[] | null;
+  images: { url: string; isPrimary: boolean }[] | null;
 };
 
 function toModal(c: Campaign): ProjectForModal {
@@ -71,6 +72,7 @@ export default function DonaPage() {
   const [notFound, setNotFound] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied]     = useState(false);
+  const [carouselIdx, setCarouselIdx] = useState(0);
 
   useEffect(() => {
     if (!slug) { setLoading(false); setNotFound(true); return; }
@@ -120,24 +122,46 @@ export default function DonaPage() {
   const pct       = Math.min(Math.round((campaign.raised / campaign.goal) * 100), 100);
   const remaining = Math.max(campaign.goal - campaign.raised, 0);
 
+  // Build carousel images list: prefer images[] array, fallback to single image_url
+  const carouselImages: string[] =
+    campaign.images?.length
+      ? campaign.images
+          .slice()
+          .sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0))
+          .map(i => i.url)
+      : campaign.image_url
+      ? [campaign.image_url]
+      : [];
+
+  const prevSlide = () => setCarouselIdx(i => (i - 1 + carouselImages.length) % carouselImages.length);
+  const nextSlide = () => setCarouselIdx(i => (i + 1) % carouselImages.length);
+
   return (
     <>
       <div className="min-h-screen bg-white pb-24 lg:pb-0">
 
-        {/* ── Hero ── */}
+        {/* ── Hero / Carousel ── */}
         <div className="relative h-72 lg:h-[420px] w-full overflow-hidden">
-          {campaign.image_url ? (
-            <img
-              src={campaign.image_url}
-              alt={campaign.name}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+
+          {/* Images with crossfade */}
+          {carouselImages.length > 0 ? (
+            carouselImages.map((url, i) => (
+              <img
+                key={url}
+                src={url}
+                alt={campaign.name}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                  i === carouselIdx ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            ))
           ) : (
             <div
               className="absolute inset-0"
               style={{ background: campaign.image_gradient ?? "linear-gradient(135deg,#8B1A1A,#B45309)" }}
             />
           )}
+
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/10" />
 
@@ -152,8 +176,43 @@ export default function DonaPage() {
             </Link>
           </div>
 
-          {/* Hero text */}
+          {/* Prev / Next arrows — only when more than 1 image */}
+          {carouselImages.length > 1 && (
+            <>
+              <button
+                onClick={prevSlide}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm flex items-center justify-center text-white transition-all"
+                aria-label="Anterior"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm flex items-center justify-center text-white transition-all"
+                aria-label="Siguiente"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+
+          {/* Hero text + dots */}
           <div className="absolute bottom-0 left-0 right-0 px-5 pb-8 lg:px-10 lg:pb-10">
+            {/* Dots — above the title */}
+            {carouselImages.length > 1 && (
+              <div className="flex gap-1.5 mb-3">
+                {carouselImages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCarouselIdx(i)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i === carouselIdx ? "w-5 bg-white" : "w-1.5 bg-white/50"
+                    }`}
+                    aria-label={`Foto ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
             {campaign.category && (
               <span
                 className="inline-block text-xs font-bold px-3 py-1 rounded-full mb-3"
@@ -181,26 +240,6 @@ export default function DonaPage() {
                 <p className="text-lg lg:text-xl text-gray-700 leading-relaxed mb-8 font-medium">
                   {campaign.short_description}
                 </p>
-              )}
-
-              {campaign.objective && (
-                <div className="mb-7">
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                      <Target className="w-4 h-4 text-[#8B1A1A]" />
-                    </div>
-                    <h2 className="text-xs font-bold text-[#8B1A1A] uppercase tracking-widest">
-                      Objetivo del proyecto
-                    </h2>
-                  </div>
-                  <p className="text-gray-700 leading-relaxed pl-[52px]">
-                    {campaign.objective}
-                  </p>
-                </div>
-              )}
-
-              {campaign.objective && campaign.resources_use && (
-                <hr className="border-gray-100 my-6" />
               )}
 
               {campaign.resources_use && (
