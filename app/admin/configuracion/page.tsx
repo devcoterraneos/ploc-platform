@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { Save, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, useRef } from "react";
+import { Save, ChevronDown, ChevronUp, Upload } from "lucide-react";
 import { defaultSiteSettings } from "@/lib/data";
 import { persistSettings } from "@/lib/settings-context";
+
+type FieldType = "text" | "textarea" | "color" | "number" | "url" | "toggle" | "image-upload";
 
 type SettingsSection = {
   id: string;
   label: string;
-  fields: { key: string; label: string; type: "text" | "textarea" | "color" | "number" | "url" | "toggle" }[];
+  fields: { key: string; label: string; type: FieldType }[];
 };
 
 const sections: SettingsSection[] = [
@@ -16,18 +18,19 @@ const sections: SettingsSection[] = [
     id: "hero",
     label: "Hero principal",
     fields: [
-      { key: "heroImageUrl", label: "URL imagen hero", type: "url" },
-      { key: "heroTitle", label: "Título (usa \\n para salto de línea)", type: "text" },
-      { key: "heroHighlight", label: "Texto destacado en color primario", type: "text" },
-      { key: "heroSubtitle", label: "Subtítulo", type: "textarea" },
+      { key: "heroImageUrl",   label: "Imagen hero",                           type: "image-upload" },
+      { key: "heroTitle",      label: "Título (usa \\n para salto de línea)",  type: "text" },
+      { key: "heroHighlight",  label: "Texto destacado en color primario",     type: "text" },
+      { key: "heroSubtitle",   label: "Subtítulo",                             type: "textarea" },
     ],
   },
   {
     id: "branding",
     label: "Marca y colores",
     fields: [
-      { key: "primaryColor", label: "Color primario", type: "color" },
-      { key: "footerDescription", label: "Descripción en el footer", type: "textarea" },
+      { key: "logoUrl",           label: "Logo principal",              type: "image-upload" },
+      { key: "primaryColor",      label: "Color primario",              type: "color" },
+      { key: "footerDescription", label: "Descripción en el footer",    type: "textarea" },
     ],
   },
   {
@@ -35,45 +38,27 @@ const sections: SettingsSection[] = [
     label: "Sección proyectos",
     fields: [
       { key: "projectsSectionSubtitle", label: "Label superior (pequeño, color primario)", type: "text" },
-      { key: "projectsSectionTitle", label: "Título de la sección", type: "text" },
-    ],
-  },
-  {
-    id: "transparency",
-    label: "Sección transparencia",
-    fields: [
-      { key: "transparencyTitle", label: "Título", type: "text" },
-      { key: "transparencySubtitle", label: "Subtítulo", type: "textarea" },
+      { key: "projectsSectionTitle",    label: "Título de la sección",                     type: "text" },
     ],
   },
   {
     id: "contact",
     label: "Contacto y redes sociales",
     fields: [
-      { key: "contactEmail", label: "Email de contacto", type: "text" },
-      { key: "contactPhone", label: "Teléfono", type: "text" },
-      { key: "socialFacebook", label: "Facebook URL", type: "url" },
-      { key: "socialInstagram", label: "Instagram URL", type: "url" },
-      { key: "socialYoutube", label: "YouTube URL", type: "url" },
-      { key: "socialLinkedin", label: "LinkedIn URL", type: "url" },
+      { key: "contactEmail",    label: "Email de contacto", type: "text" },
+      { key: "contactPhone",    label: "Teléfono",          type: "text" },
+      { key: "socialFacebook",  label: "Facebook URL",      type: "url" },
+      { key: "socialInstagram", label: "Instagram URL",     type: "url" },
+      { key: "socialYoutube",   label: "YouTube URL",       type: "url" },
+      { key: "socialLinkedin",  label: "LinkedIn URL",      type: "url" },
     ],
   },
   {
     id: "visibility",
     label: "Visibilidad de secciones opcionales",
     fields: [
-      { key: "showMembershipSection", label: "Mostrar sección «Hazte socio/a»", type: "toggle" },
+      { key: "showMembershipSection",   label: "Mostrar sección «Hazte socio/a»", type: "toggle" },
       { key: "showTransparencySection", label: "Mostrar sección «Transparencia»", type: "toggle" },
-    ],
-  },
-  {
-    id: "flow",
-    label: "Integración Flow (Pagos)",
-    fields: [
-      { key: "flowApiKey", label: "Flow API Key", type: "text" },
-      { key: "flowSecretKey", label: "Flow Secret Key", type: "text" },
-      { key: "flowReturnUrl", label: "URL de retorno tras pago", type: "url" },
-      { key: "flowConfirmUrl", label: "URL webhook de confirmación", type: "url" },
     ],
   },
 ];
@@ -84,34 +69,66 @@ export default function ConfiguracionAdminPage() {
     heroTitle: defaultSiteSettings.heroTitle,
     showMembershipSection: defaultSiteSettings.showMembershipSection,
     showTransparencySection: defaultSiteSettings.showTransparencySection,
-    flowApiKey: "",
-    flowSecretKey: "",
-    flowReturnUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/gracias`,
-    flowConfirmUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/api/flow/webhook`,
   } as unknown as Record<string, string | boolean>);
 
   const [openSections, setOpenSections] = useState<string[]>(["hero"]);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved]               = useState(false);
+  const [uploading, setUploading]       = useState<string | null>(null);
+  const [uploadField, setUploadField]   = useState<string | null>(null);
+  const fileInputRef                    = useRef<HTMLInputElement>(null);
 
-  const toggle = (id: string) => {
+  const toggle = (id: string) =>
     setOpenSections((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
-  };
 
   const handleSave = async () => {
-    await persistSettings(settings);   // guarda en Supabase + localStorage
+    await persistSettings(settings);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
 
+  async function handleImageUpload(file: File, fieldKey: string) {
+    setUploading(fieldKey);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "campaign-images");
+      const res  = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.url) {
+        setSettings((prev) => ({ ...prev, [fieldKey]: data.url as string }));
+      } else {
+        alert("Error al subir imagen: " + (data.error ?? "desconocido"));
+      }
+    } catch {
+      alert("Error al subir imagen");
+    } finally {
+      setUploading(null);
+      setUploadField(null);
+    }
+  }
+
   return (
     <div>
+      {/* Input oculto compartido para todos los campos image-upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && uploadField) handleImageUpload(file, uploadField);
+          e.target.value = "";
+        }}
+      />
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Modifica el front-end y las integraciones sin tocar código.
+            Modifica el front-end sin tocar código.
           </p>
         </div>
         <button
@@ -149,107 +166,134 @@ export default function ConfiguracionAdminPage() {
 
               {isOpen && (
                 <div className="px-6 pb-6 border-t border-gray-100 pt-4">
-                  {section.id === "flow" && (
-                    <div className="mb-4 bg-yellow-50 border border-yellow-100 rounded-xl p-3">
-                      <p className="text-xs text-yellow-700">
-                        Las credenciales de Flow deben configurarse en las variables de entorno (.env.local)
-                        por seguridad. Los valores aquí mostrados son para referencia.
-                      </p>
-                    </div>
-                  )}
                   <div className="grid md:grid-cols-2 gap-4">
-                    {section.fields.map((field) => (
-                      <div key={field.key} className={field.type === "textarea" || field.type === "toggle" ? "md:col-span-2" : ""}>
-                        <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                          {field.label}
-                        </label>
-                        {field.type === "toggle" ? (
-                          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
-                            <span className="text-sm text-gray-600">{field.label}</span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSettings((prev) => ({
-                                  ...prev,
-                                  [field.key]: !prev[field.key],
-                                }))
-                              }
-                              className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
-                                settings[field.key] ? "bg-[#8B1A1A]" : "bg-gray-300"
-                              }`}
-                            >
-                              <span
-                                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                                  settings[field.key] ? "translate-x-5" : "translate-x-0"
+                    {section.fields.map((field) => {
+                      const isWide =
+                        field.type === "textarea" ||
+                        field.type === "toggle" ||
+                        field.type === "image-upload";
+                      return (
+                        <div key={field.key} className={isWide ? "md:col-span-2" : ""}>
+                          <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                            {field.label}
+                          </label>
+
+                          {field.type === "image-upload" ? (
+                            <div className="space-y-3">
+                              {/* Preview */}
+                              {settings[field.key] && (
+                                <div
+                                  className={`relative w-full rounded-xl overflow-hidden border border-gray-200 ${
+                                    field.key === "logoUrl"
+                                      ? "h-24 bg-gray-100 flex items-center justify-center"
+                                      : "h-44 bg-gray-100"
+                                  }`}
+                                >
+                                  <img
+                                    src={settings[field.key] as string}
+                                    alt={field.label}
+                                    className={`w-full h-full ${
+                                      field.key === "logoUrl" ? "object-contain p-3" : "object-cover"
+                                    }`}
+                                  />
+                                </div>
+                              )}
+                              {/* Upload button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUploadField(field.key);
+                                  fileInputRef.current?.click();
+                                }}
+                                disabled={uploading !== null}
+                                className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50"
+                              >
+                                {uploading === field.key ? (
+                                  <>
+                                    <span className="w-4 h-4 border-2 border-[#8B1A1A] border-t-transparent rounded-full animate-spin" />
+                                    Subiendo…
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload className="w-4 h-4 text-gray-500" />
+                                    {settings[field.key] ? "Cambiar imagen" : "Subir imagen"}
+                                  </>
+                                )}
+                              </button>
+                            </div>
+
+                          ) : field.type === "toggle" ? (
+                            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+                              <span className="text-sm text-gray-600">{field.label}</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSettings((prev) => ({
+                                    ...prev,
+                                    [field.key]: !prev[field.key],
+                                  }))
+                                }
+                                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                                  settings[field.key] ? "bg-[#8B1A1A]" : "bg-gray-300"
                                 }`}
-                              />
-                            </button>
-                          </div>
-                        ) : field.type === "textarea" ? (
-                          <textarea
-                            rows={3}
-                            value={(settings[field.key] as string) ?? ""}
-                            onChange={(e) =>
-                              setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
-                            }
-                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A] resize-none"
-                          />
-                        ) : field.type === "color" ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="color"
-                              value={(settings[field.key] as string) ?? "#8B1A1A"}
-                              onChange={(e) =>
-                                setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
-                              }
-                              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-1"
-                            />
-                            <input
-                              type="text"
+                              >
+                                <span
+                                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                                    settings[field.key] ? "translate-x-5" : "translate-x-0"
+                                  }`}
+                                />
+                              </button>
+                            </div>
+
+                          ) : field.type === "textarea" ? (
+                            <textarea
+                              rows={3}
                               value={(settings[field.key] as string) ?? ""}
                               onChange={(e) =>
                                 setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
                               }
-                              className="flex-1 px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A]"
+                              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A] resize-none"
                             />
-                          </div>
-                        ) : (
-                          <input
-                            type={field.type}
-                            value={(settings[field.key] as string) ?? ""}
-                            onChange={(e) =>
-                              setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
-                            }
-                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A]"
-                          />
-                        )}
-                      </div>
-                    ))}
+
+                          ) : field.type === "color" ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="color"
+                                value={(settings[field.key] as string) ?? "#8B1A1A"}
+                                onChange={(e) =>
+                                  setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
+                                }
+                                className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-1"
+                              />
+                              <input
+                                type="text"
+                                value={(settings[field.key] as string) ?? ""}
+                                onChange={(e) =>
+                                  setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
+                                }
+                                className="flex-1 px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A]"
+                              />
+                            </div>
+
+                          ) : (
+                            <input
+                              type={field.type === "image-upload" ? "text" : field.type}
+                              value={(settings[field.key] as string) ?? ""}
+                              onChange={(e) =>
+                                setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
+                              }
+                              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A]"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
           );
         })}
-      </div>
-
-      {/* Supabase connection status */}
-      <div className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-5">
-        <h3 className="font-bold text-blue-900 mb-1">Estado de conexiones</h3>
-        <div className="space-y-2 mt-3">
-          {[
-            { name: "Supabase", status: "pending", note: "Configura NEXT_PUBLIC_SUPABASE_URL" },
-            { name: "Flow Payments", status: "pending", note: "Configura FLOW_API_KEY" },
-          ].map((conn) => (
-            <div key={conn.name} className="flex items-center justify-between text-sm">
-              <span className="font-medium text-gray-700">{conn.name}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">{conn.note}</span>
-                <span className="w-2 h-2 rounded-full bg-yellow-400" />
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

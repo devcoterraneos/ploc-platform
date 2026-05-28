@@ -65,8 +65,8 @@ export const defaultTestimonial: Testimonial = {
   id: "1",
   quote:
     "Puerto Octay es más que un lugar, es nuestra casa. Cuidarlo y proyectarlo depende de todos nosotros.",
-  name: "María Angélica Mansilla",
-  role: "Vecina y voluntaria",
+  name: "Equipo Corporación Ploc",
+  role: "Trabajando por Puerto Octay",
   imageUrl: "/images/testimonial-community.jpg",
   isActive: true,
 };

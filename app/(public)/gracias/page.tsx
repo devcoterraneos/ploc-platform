@@ -34,7 +34,7 @@ export default function GraciasPage() {
           </p>
           <p className="text-sm text-gray-600 leading-relaxed">
             "Puerto Octay es más que un lugar, es nuestra casa. Cuidarlo y proyectarlo
-            depende de todos nosotros." — María Angélica Mansilla
+            depende de todos nosotros." — Equipo Corporación Ploc
           </p>
         </div>
 

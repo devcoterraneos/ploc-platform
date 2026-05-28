@@ -136,9 +136,9 @@ export const impactStats = [
 export const testimonial = {
   quote:
     "Cuando trabajamos juntos, nuestro territorio florece. Gracias a cada persona que confía y aporta.",
-  name: "María Angélica Mansilla",
-  role: "Vecina y voluntaria",
-  initials: "MA",
+  name: "Equipo Corporación Ploc",
+  role: "Trabajando por Puerto Octay",
+  initials: "CP",
 };
 
 // --- Membresía / Socios -------------------------------------------------------
