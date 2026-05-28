@@ -33,19 +33,27 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: "Faltan datos requeridos" }), { status: 400, headers: corsHeaders });
     }
 
+    // ── 0. Validate env vars up front ─────────────────────────────────────────
     const apiKey    = env.FLOW_API_KEY;
     const secretKey = env.FLOW_SECRET_KEY;
     const baseUrl   = env.NEXT_PUBLIC_BASE_URL ?? "https://corporacionploc.pages.dev";
-    const commerceOrder = `PLOC-${Date.now()}`;
 
-    // ── 1. Save pending donation in Supabase ──────────────────────────────────
+    if (!apiKey || !secretKey) {
+      console.error("Flow credentials missing. FLOW_API_KEY:", !!apiKey, "FLOW_SECRET_KEY:", !!secretKey);
+      return new Response(JSON.stringify({ error: "Credenciales Flow no configuradas en el servidor" }), { status: 500, headers: corsHeaders });
+    }
+
     const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey  = env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceKey) {
+      console.error("Supabase credentials missing. URL:", !!supabaseUrl, "SERVICE_KEY:", !!serviceKey);
       return new Response(JSON.stringify({ error: "Variables de entorno de Supabase no configuradas" }), { status: 500, headers: corsHeaders });
     }
 
+    const commerceOrder = `PLOC-${Date.now()}`;
+
+    // ── 1. Save pending donation in Supabase ──────────────────────────────────
     const sbRes = await fetch(`${supabaseUrl}/rest/v1/donations`, {
       method: "POST",
       headers: {
@@ -75,11 +83,11 @@ export async function onRequestPost(context) {
     const params = {
       apiKey,
       commerceOrder,
-      subject:        `Donación PLOC${campaignName ? " — " + campaignName : ""}`,
-      currency:       "CLP",
-      amount:         String(amount),
-      email:          donorEmail,
-      paymentMethod:  "9",
+      subject:         `Donacion PLOC${campaignName ? " - " + campaignName : ""}`,
+      currency:        "CLP",
+      amount:          String(amount),
+      email:           donorEmail,
+      paymentMethod:   "9",
       urlConfirmation: `${baseUrl}/api/flow/confirm`,
       urlReturn:       `${baseUrl}/gracias`,
     };
@@ -87,17 +95,31 @@ export async function onRequestPost(context) {
     const signature = await computeSignature(params, secretKey);
 
     const form = new URLSearchParams({ ...params, s: signature });
-    const flowRes  = await fetch("https://www.flow.cl/api/payment/create", {
+    const flowRes = await fetch("https://www.flow.cl/api/payment/create", {
       method:  "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body:    form,
     });
 
+    // ── 3. Parse Flow response safely (may return HTML on error) ─────────────
+    const contentType = flowRes.headers.get("content-type") ?? "";
+    if (!contentType.includes("application/json")) {
+      const text = await flowRes.text();
+      console.error("Flow non-JSON response:", flowRes.status, text.slice(0, 300));
+      return new Response(
+        JSON.stringify({ error: `Flow respondió con estado ${flowRes.status} (respuesta no-JSON)` }),
+        { status: 502, headers: corsHeaders }
+      );
+    }
+
     const data = await flowRes.json();
 
     if (!data.url || !data.token) {
-      console.error("Flow error:", data);
-      return new Response(JSON.stringify({ error: data.message ?? "Error al crear el pago" }), { status: 502, headers: corsHeaders });
+      console.error("Flow error response:", JSON.stringify(data));
+      return new Response(
+        JSON.stringify({ error: data.message ?? `Flow error código ${data.code ?? "desconocido"}` }),
+        { status: 502, headers: corsHeaders }
+      );
     }
 
     return new Response(
@@ -106,8 +128,11 @@ export async function onRequestPost(context) {
     );
 
   } catch (err) {
-    console.error("create.js error:", err);
-    return new Response(JSON.stringify({ error: "Error interno" }), { status: 500, headers: corsHeaders });
+    console.error("create.js unhandled error:", err);
+    return new Response(
+      JSON.stringify({ error: `Error interno: ${err.message}` }),
+      { status: 500, headers: corsHeaders }
+    );
   }
 }
 
