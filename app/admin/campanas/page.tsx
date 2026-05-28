@@ -446,9 +446,6 @@ export default function CampanasAdminPage() {
                   <Field label="Meta ($) *">
                     <input type="number" value={editItem.goal ?? 0} onChange={e => set("goal", Number(e.target.value))} className={INPUT} />
                   </Field>
-                  <Field label="Recaudado ($)">
-                    <input type="number" value={editItem.raised ?? 0} onChange={e => set("raised", Number(e.target.value))} className={INPUT} />
-                  </Field>
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-gray-700 mb-2">Montos sugeridos de donación (4 botones)</label>
                     <div className="grid grid-cols-4 gap-2">
