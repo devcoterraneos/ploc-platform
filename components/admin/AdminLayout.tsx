@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Megaphone,
@@ -13,26 +13,70 @@ import {
   ChevronRight,
   ExternalLink,
   Menu,
+  LogOut,
 } from "lucide-react";
 import Logo from "@/components/Logo";
+import supabase from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/campanas", label: "Campañas", icon: Megaphone },
-  { href: "/admin/donantes", label: "Donantes", icon: Heart },
-  { href: "/admin/socios", label: "Socios", icon: Users },
-  { href: "/admin/configuracion", label: "Configuración", icon: Settings },
+  { href: "/admin",              label: "Dashboard",     icon: LayoutDashboard, exact: true },
+  { href: "/admin/campanas",     label: "Campañas",      icon: Megaphone },
+  { href: "/admin/donantes",     label: "Donantes",      icon: Heart },
+  { href: "/admin/socios",       label: "Socios",        icon: Users },
+  { href: "/admin/configuracion",label: "Configuración", icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser]             = useState<User | null>(null);
+  const [checking, setChecking]     = useState(true);
   const pathname = usePathname();
+  const router   = useRouter();
 
-  const isActive = (item: typeof navItems[0]) => {
+  useEffect(() => {
+    // Check current session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.replace("/admin/login");
+      } else {
+        setUser(session.user);
+        setChecking(false);
+      }
+    });
+
+    // Listen for auth changes (logout from another tab, token expiry, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.replace("/admin/login");
+      } else {
+        setUser(session.user);
+        setChecking(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.replace("/admin/login");
+  }
+
+  const isActive = (item: (typeof navItems)[0]) => {
     if (item.exact) return pathname === item.href;
     return pathname.startsWith(item.href);
   };
+
+  // Show spinner while verifying session
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-[#8B1A1A] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <div
@@ -76,8 +120,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         })}
       </nav>
 
-      {/* View site */}
-      <div className={`p-3 border-t border-gray-100 ${collapsed && !mobile ? "flex justify-center" : ""}`}>
+      {/* Bottom: view site + logout */}
+      <div className={`p-3 border-t border-gray-100 space-y-1 ${collapsed && !mobile ? "flex flex-col items-center" : ""}`}>
         <a
           href="/"
           target="_blank"
@@ -89,6 +133,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <ExternalLink className="w-4 h-4 flex-shrink-0" />
           {(!collapsed || mobile) && "Ver sitio"}
         </a>
+        <button
+          onClick={handleLogout}
+          className={`flex items-center gap-2 text-xs text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50 w-full ${
+            collapsed && !mobile ? "justify-center" : ""
+          }`}
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          {(!collapsed || mobile) && "Cerrar sesión"}
+        </button>
       </div>
     </div>
   );
@@ -121,9 +174,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1" />
-          <div className="text-xs text-gray-400 bg-yellow-50 border border-yellow-100 px-3 py-1.5 rounded-full">
-            Admin — modo desarrollo
-          </div>
+          {user && (
+            <span className="text-xs text-gray-400 hidden sm:block">
+              {user.email}
+            </span>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Salir
+          </button>
         </div>
 
         {/* Page content */}
