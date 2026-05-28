@@ -83,10 +83,11 @@ export default function CampanasAdminPage() {
   async function fetchCampaigns() {
     if (!isConfigured()) { setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("campaigns")
-      .select("id,slug,name,short_description,objective,resources_use,category,category_color,category_bg,goal,raised,status,sort_order,image_url,image_gradient,donation_amounts,images")
+      .select("*")
       .order("sort_order", { ascending: true });
+    if (error) setSaveError(error.message);
     if (data) setCampaigns(data as Campaign[]);
     setLoading(false);
   }
