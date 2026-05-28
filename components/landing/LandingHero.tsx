@@ -36,8 +36,7 @@ export default function LandingHero() {
                 {i < titleLines.length - 1 && <br />}
               </span>
             ))}{" "}
-            {/* Lighter red so it pops on the dark overlay */}
-            <span className="text-red-300">{s.heroHighlight}</span>
+            <span style={{ color: s.primaryColor }}>{s.heroHighlight}</span>
           </h1>
 
           <p className="text-white/85 text-lg mb-10 leading-relaxed max-w-lg">
