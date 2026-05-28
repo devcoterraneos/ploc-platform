@@ -146,8 +146,7 @@ export default function LandingProjects() {
     supabase
       .from("campaigns")
       .select("*")
-      .eq("is_featured", true)
-      .eq("is_active", true)
+      .eq("status", "active")
       .order("sort_order", { ascending: true })
       .then(({ data, error }) => {
         if (!error && data && data.length > 0) {
