@@ -277,7 +277,7 @@ export default function ConfiguracionAdminPage() {
 
                           ) : (
                             <input
-                              type={field.type === "image-upload" ? "text" : field.type}
+                              type={field.type as string}
                               value={(settings[field.key] as string) ?? ""}
                               onChange={(e) =>
                                 setSettings((prev) => ({ ...prev, [field.key]: e.target.value }))
