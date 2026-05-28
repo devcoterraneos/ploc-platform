@@ -350,13 +350,9 @@ export default function CampanasAdminPage() {
               <section>
                 <SectionTitle>Contenido del popup de donación</SectionTitle>
                 <div className="space-y-3">
-                  <Field label="Descripción corta (card de la landing)">
+                  <Field label="Descripción de la campaña">
                     <textarea rows={2} value={editItem.short_description ?? ""} onChange={e => set("short_description", e.target.value)}
                       className={`${INPUT} resize-none`} placeholder="Una línea atractiva que resume el proyecto" />
-                  </Field>
-                  <Field label="¿De qué trata el proyecto?">
-                    <textarea rows={3} value={editItem.objective ?? ""} onChange={e => set("objective", e.target.value)}
-                      className={`${INPUT} resize-none`} placeholder="Descripción completa del objetivo, aparece en el popup" />
                   </Field>
                   <Field label="¿Para qué se usarán los recursos?">
                     <textarea rows={3} value={editItem.resources_use ?? ""} onChange={e => set("resources_use", e.target.value)}
