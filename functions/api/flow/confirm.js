@@ -43,8 +43,13 @@ export async function onRequestPost(context) {
     const status = STATUS_MAP[payment.status] ?? "unknown";
 
     // ── 2. Update donation in Supabase ────────────────────────────────────────
-    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = env.SUPABASE_URL;          // mismo nombre que create.js
     const serviceKey  = env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceKey) {
+      console.error("confirm.js: Supabase env vars missing");
+      return new Response("Config error", { status: 500 });
+    }
 
     const updateBody = {
       status,
@@ -60,7 +65,7 @@ export async function onRequestPost(context) {
       updateBody.paid_at = new Date().toISOString();
     }
 
-    await fetch(
+    const patchRes = await fetch(
       `${supabaseUrl}/rest/v1/donations?commerce_order=eq.${encodeURIComponent(payment.commerceOrder)}`,
       {
         method: "PATCH",
@@ -73,6 +78,12 @@ export async function onRequestPost(context) {
         body: JSON.stringify(updateBody),
       }
     );
+
+    if (!patchRes.ok) {
+      const errText = await patchRes.text();
+      console.error("confirm.js: Supabase PATCH failed", patchRes.status, errText);
+      return new Response("DB update failed", { status: 500 });
+    }
 
     return new Response("OK", { status: 200 });
 
