@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { featuredProjects } from "@/lib/landing-config";
 import { formatCLP } from "@/lib/data";
 import { useSettings } from "@/lib/settings-context";
 import supabase, { isConfigured } from "@/lib/supabase";
-import DonationModal, { type ProjectForModal } from "./DonationModal";
 
 type Project = (typeof featuredProjects)[0];
 
@@ -28,16 +28,17 @@ function ProjectCardSkeleton() {
 function ProjectCard({
   project,
   primaryColor,
-  onDonate,
 }: {
   project: Project;
   primaryColor: string;
-  onDonate: (p: ProjectForModal) => void;
 }) {
   const pct = Math.min(Math.round((project.raised / project.goal) * 100), 100);
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
+    <Link
+      href={`/dona/${project.slug}`}
+      className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all group block"
+    >
       <div
         className="h-44 w-full relative flex items-end p-4"
         style={
@@ -87,30 +88,15 @@ function ProjectCard({
           <span className="font-normal text-gray-400">recaudado</span>
         </p>
 
-        <button
-          onClick={() => onDonate({
-            id: project.id,
-            name: project.name,
-            description: project.description ?? "",
-            objective: project.objective ?? "",
-            resourcesUse: project.resourcesUse ?? "",
-            goal: project.goal,
-            raised: project.raised,
-            imageUrl: project.imageUrl,
-            imageGradient: project.imageGradient ?? "",
-            donationAmounts: project.donationAmounts,
-            category: project.category ?? "",
-            categoryColor: project.categoryColor ?? "#8B1A1A",
-            categoryBg: project.categoryBg ?? "#FEF3C7",
-          })}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-semibold transition-colors"
+        <div
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-semibold"
           style={{ backgroundColor: primaryColor }}
         >
           Apoyar este proyecto
           <ArrowRight className="w-4 h-4" />
-        </button>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -137,7 +123,6 @@ function rowToProject(row: Record<string, unknown>): Project {
 export default function LandingProjects() {
   const [projects, setProjects] = useState<Project[]>(featuredProjects);
   const [loading, setLoading]   = useState(isConfigured());
-  const [activeProject, setActiveProject] = useState<ProjectForModal | null>(null);
   const s = useSettings();
 
   useEffect(() => {
@@ -179,16 +164,10 @@ export default function LandingProjects() {
                   key={project.id}
                   project={project}
                   primaryColor={s.primaryColor}
-                  onDonate={setActiveProject}
                 />
               ))}
         </div>
       </div>
-
-      <DonationModal
-        project={activeProject}
-        onClose={() => setActiveProject(null)}
-      />
     </section>
   );
 }

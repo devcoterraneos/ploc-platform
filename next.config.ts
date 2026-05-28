@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "corporacionploc.org",
       },
+      {
+        protocol: "https",
+        hostname: "rypnsrviavrvwwbfncdc.supabase.co",
+      },
     ],
   },
 };

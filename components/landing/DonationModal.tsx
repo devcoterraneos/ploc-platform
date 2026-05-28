@@ -23,6 +23,7 @@ export interface ProjectForModal {
 interface DonationModalProps {
   project: ProjectForModal | null;
   onClose: () => void;
+  initialStep?: 1 | 2;
 }
 
 function ProgressBar({ value, className = "" }: { value: number; className?: string }) {
@@ -36,7 +37,34 @@ function ProgressBar({ value, className = "" }: { value: number; className?: str
   );
 }
 
-function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
+function StepIndicator({ current, twoStep = false }: { current: 1 | 2 | 3; twoStep?: boolean }) {
+  // twoStep=true: solo muestra "Monto" y "Datos" (pasos 2 y 3 del flujo completo)
+  if (twoStep) {
+    const display = current - 1; // step 2 → display 1, step 3 → display 2
+    const labels  = ["Monto", "Datos"];
+    return (
+      <div className="flex items-center justify-center gap-0 mb-6">
+        {[1, 2].map((s) => (
+          <div key={s} className="flex items-center">
+            <div className="flex flex-col items-center gap-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                display > s ? "bg-[#8B1A1A] text-white" : display === s ? "bg-[#8B1A1A] text-white ring-4 ring-red-100" : "bg-gray-100 text-gray-400"
+              }`}>
+                {display > s ? <Check className="w-4 h-4" /> : s}
+              </div>
+              <span className={`text-xs font-medium ${display >= s ? "text-[#8B1A1A]" : "text-gray-400"}`}>
+                {labels[s - 1]}
+              </span>
+            </div>
+            {s < 2 && (
+              <div className={`w-16 h-0.5 mb-4 mx-1 transition-all ${display > s ? "bg-[#8B1A1A]" : "bg-gray-100"}`} />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const labels = ["Proyecto", "Monto", "Datos"];
   return (
     <div className="flex items-center justify-center gap-0 mb-6">
@@ -54,20 +82,12 @@ function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
             >
               {current > s ? <Check className="w-4 h-4" /> : s}
             </div>
-            <span
-              className={`text-xs font-medium ${
-                current >= s ? "text-[#8B1A1A]" : "text-gray-400"
-              }`}
-            >
+            <span className={`text-xs font-medium ${current >= s ? "text-[#8B1A1A]" : "text-gray-400"}`}>
               {labels[s - 1]}
             </span>
           </div>
           {s < 3 && (
-            <div
-              className={`w-16 h-0.5 mb-4 mx-1 transition-all ${
-                current > s ? "bg-[#8B1A1A]" : "bg-gray-100"
-              }`}
-            />
+            <div className={`w-16 h-0.5 mb-4 mx-1 transition-all ${current > s ? "bg-[#8B1A1A]" : "bg-gray-100"}`} />
           )}
         </div>
       ))}
@@ -416,8 +436,9 @@ function Step3({
 
 // ─── Modal wrapper ─────────────────────────────────────────────────────────────
 
-export default function DonationModal({ project, onClose }: DonationModalProps) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+export default function DonationModal({ project, onClose, initialStep = 1 }: DonationModalProps) {
+  const twoStep = initialStep === 2;
+  const [step, setStep] = useState<1 | 2 | 3>(initialStep);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [form, setForm] = useState({
@@ -430,12 +451,12 @@ export default function DonationModal({ project, onClose }: DonationModalProps) 
   // Reset on open
   useEffect(() => {
     if (project) {
-      setStep(1);
+      setStep(initialStep);
       setSelectedAmount(null);
       setCustomAmount("");
       setForm({ name: "", email: "", phone: "", newsletter: true });
     }
-  }, [project]);
+  }, [project, initialStep]);
 
   // Lock body scroll
   useEffect(() => {
@@ -475,7 +496,7 @@ export default function DonationModal({ project, onClose }: DonationModalProps) 
         </button>
 
         <div className="p-6 pt-5">
-          <StepIndicator current={step} />
+          <StepIndicator current={step} twoStep={twoStep} />
 
           {step === 1 && (
             <Step1 project={project} onNext={() => setStep(2)} />
@@ -487,7 +508,7 @@ export default function DonationModal({ project, onClose }: DonationModalProps) 
               custom={customAmount}
               onSelect={setSelectedAmount}
               onCustom={setCustomAmount}
-              onBack={() => setStep(1)}
+              onBack={twoStep ? onClose : () => setStep(1)}
               onNext={() => setStep(3)}
             />
           )}

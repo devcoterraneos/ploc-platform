@@ -1,0 +1,2 @@
+# Rewrite para páginas de campaña — sirve el mismo HTML para cualquier /dona/[slug]
+/dona/*  /dona  200
