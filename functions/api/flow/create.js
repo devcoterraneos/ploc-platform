@@ -42,7 +42,11 @@ export async function onRequestPost(context) {
     const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey  = env.SUPABASE_SERVICE_ROLE_KEY;
 
-    await fetch(`${supabaseUrl}/rest/v1/donations`, {
+    if (!supabaseUrl || !serviceKey) {
+      return new Response(JSON.stringify({ error: "Variables de entorno de Supabase no configuradas" }), { status: 500, headers: corsHeaders });
+    }
+
+    const sbRes = await fetch(`${supabaseUrl}/rest/v1/donations`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -60,6 +64,12 @@ export async function onRequestPost(context) {
         status:         "pending",
       }),
     });
+
+    if (!sbRes.ok) {
+      const sbErr = await sbRes.text();
+      console.error("Supabase error:", sbRes.status, sbErr);
+      return new Response(JSON.stringify({ error: `Supabase error ${sbRes.status}: ${sbErr}` }), { status: 500, headers: corsHeaders });
+    }
 
     // ── 2. Create Flow payment order ──────────────────────────────────────────
     const params = {
