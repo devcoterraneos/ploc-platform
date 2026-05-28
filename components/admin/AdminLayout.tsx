@@ -28,15 +28,20 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router   = useRouter();
+  const isLoginPage = pathname === "/admin/login";
+
   const [collapsed, setCollapsed]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser]             = useState<User | null>(null);
-  const [checking, setChecking]     = useState(true);
-  const pathname = usePathname();
-  const router   = useRouter();
+  // No spinner needed on the login page itself
+  const [checking, setChecking]     = useState(!isLoginPage);
 
   useEffect(() => {
-    // Check current session on mount
+    // Login page doesn't need auth check
+    if (isLoginPage) return;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         router.replace("/admin/login");
@@ -46,7 +51,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     });
 
-    // Listen for auth changes (logout from another tab, token expiry, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
         router.replace("/admin/login");
@@ -57,7 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router, isLoginPage]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -69,7 +73,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname.startsWith(item.href);
   };
 
-  // Show spinner while verifying session
+  // Login page: render without admin shell (no spinner, no sidebar)
+  if (isLoginPage) return <>{children}</>;
+
+  // Show spinner while verifying session for other admin pages
   if (checking) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
