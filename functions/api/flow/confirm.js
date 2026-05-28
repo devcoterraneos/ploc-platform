@@ -37,7 +37,11 @@ export async function onRequestPost(context) {
     const signature = await computeSignature(params, secretKey);
     const query     = new URLSearchParams({ ...params, s: signature });
 
-    const flowRes = await fetch(`https://www.flow.cl/api/payment/getStatus?${query}`);
+    const flowBase = env.FLOW_MODE === "sandbox"
+      ? "https://sandbox.flow.cl/api"
+      : "https://www.flow.cl/api";
+
+    const flowRes = await fetch(`${flowBase}/payment/getStatus?${query}`);
     const payment = await flowRes.json();
 
     const status = STATUS_MAP[payment.status] ?? "unknown";

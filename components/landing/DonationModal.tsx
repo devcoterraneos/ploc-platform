@@ -202,7 +202,7 @@ function Step2({
   onBack: () => void;
   onNext: () => void;
 }) {
-  const hasAmount = selected !== null || (custom.replace(/\D/g, "") !== "" && parseInt(custom.replace(/\D/g, ""), 10) > 0);
+  const hasAmount = selected !== null || (custom.replace(/\D/g, "") !== "" && parseInt(custom.replace(/\D/g, ""), 10) >= 500);
 
   function formatInput(raw: string) {
     const digits = raw.replace(/\D/g, "");
@@ -297,7 +297,7 @@ function Step3({
   onChange: (f: Partial<typeof form>) => void;
   onBack: () => void;
 }) {
-  const isValid = form.name.trim().length >= 2 && form.email.includes("@");
+  const isValid = form.name.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

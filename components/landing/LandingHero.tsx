@@ -50,7 +50,7 @@ export default function LandingHero() {
             style={{ backgroundColor: s.primaryColor }}
           >
             <Heart className="w-5 h-5 fill-white" />
-            Dona a un proyecto
+            {s.heroDonarText}
           </a>
         </div>
       </div>

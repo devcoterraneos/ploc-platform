@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /gracias
+Disallow: /api/
+
+Allow: /
+Allow: /dona/
+
+Sitemap: https://corporacionploc.pages.dev/sitemap.xml

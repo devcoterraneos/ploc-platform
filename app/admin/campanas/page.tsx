@@ -334,7 +334,7 @@ export default function CampanasAdminPage() {
                   </Field>
                   <Field label="Color fondo badge">
                     <div className="flex gap-2">
-                      <input type="color" value={editItem.category_bg ?? "#FEF3C7"} onChange={e => set("category_bg", e.target.value)} className="w-10 h10 rounded-lg border border-gray-200 cursor-pointer p-0.5 flex-shrink-0" />
+                      <input type="color" value={editItem.category_bg ?? "#FEF3C7"} onChange={e => set("category_bg", e.target.value)} className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5 flex-shrink-0" />
                       <input type="text" value={editItem.category_bg ?? "#FEF3C7"} onChange={e => set("category_bg", e.target.value)} className={INPUT} />
                     </div>
                   </Field>

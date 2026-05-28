@@ -7,8 +7,10 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
 
+  const origin      = request.headers.get("Origin") ?? "";
+  const allowOrigin = origin.includes("corporacionploc") ? origin : "https://corporacionploc.pages.dev";
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowOrigin,
     "Content-Type": "application/json",
   };
 
@@ -59,10 +61,12 @@ export async function onRequestPost(context) {
   }
 }
 
-export async function onRequestOptions() {
+export async function onRequestOptions(context) {
+  const origin      = context.request.headers.get("Origin") ?? "";
+  const allowOrigin = origin.includes("corporacionploc") ? origin : "https://corporacionploc.pages.dev";
   return new Response(null, {
     headers: {
-      "Access-Control-Allow-Origin":  "*",
+      "Access-Control-Allow-Origin":  allowOrigin,
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },

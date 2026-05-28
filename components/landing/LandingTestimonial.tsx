@@ -1,7 +1,10 @@
-import { defaultSiteSettings } from "@/lib/data";
+"use client";
+
+import { useSettings } from "@/lib/settings-context";
 
 export default function LandingTestimonial() {
-  const t = defaultSiteSettings.testimonial;
+  const s = useSettings();
+  const t = s.testimonial;
   const initials = t.name
     .split(" ")
     .filter((_, i) => i === 0 || i === 2)

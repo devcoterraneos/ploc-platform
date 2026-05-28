@@ -3,8 +3,11 @@ import AdminLayout from "@/components/admin/AdminLayout";
 
 export const metadata: Metadata = {
   title: {
-    default: "Admin | PLOC",
-    template: "%s | Admin PLOC",
+    absolute: "Admin | PLOC",
+  },
+  robots: {
+    index: false,
+    follow: false,
   },
 };
 

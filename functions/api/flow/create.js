@@ -21,8 +21,10 @@ async function computeSignature(params, secretKey) {
 export async function onRequestPost(context) {
   const { request, env } = context;
 
+  const origin      = request.headers.get("Origin") ?? "";
+  const allowOrigin = origin.includes("corporacionploc") ? origin : "https://corporacionploc.pages.dev";
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowOrigin,
     "Content-Type": "application/json",
   };
 
@@ -31,6 +33,9 @@ export async function onRequestPost(context) {
 
     if (!amount || !donorEmail) {
       return new Response(JSON.stringify({ error: "Faltan datos requeridos" }), { status: 400, headers: corsHeaders });
+    }
+    if (typeof amount !== "number" || amount < 500) {
+      return new Response(JSON.stringify({ error: "El monto mínimo de donación es $500" }), { status: 400, headers: corsHeaders });
     }
 
     // ── 0. Validate env vars up front ─────────────────────────────────────────
@@ -97,7 +102,11 @@ export async function onRequestPost(context) {
     const signature = await computeSignature(params, secretKey);
 
     const form = new URLSearchParams({ ...params, s: signature });
-    const flowRes = await fetch("https://www.flow.cl/api/payment/create", {
+    const flowBase = env.FLOW_MODE === "sandbox"
+      ? "https://sandbox.flow.cl/api"
+      : "https://www.flow.cl/api";
+
+    const flowRes = await fetch(`${flowBase}/payment/create`, {
       method:  "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body:    form,
@@ -139,10 +148,12 @@ export async function onRequestPost(context) {
 }
 
 // Handle CORS preflight
-export async function onRequestOptions() {
+export async function onRequestOptions(context) {
+  const origin      = context.request.headers.get("Origin") ?? "";
+  const allowOrigin = origin.includes("corporacionploc") ? origin : "https://corporacionploc.pages.dev";
   return new Response(null, {
     headers: {
-      "Access-Control-Allow-Origin":  "*",
+      "Access-Control-Allow-Origin":  allowOrigin,
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },

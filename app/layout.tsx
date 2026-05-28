@@ -16,9 +16,21 @@ export const metadata: Metadata = {
     "Apoya proyectos comunitarios, culturales y territoriales que fortalecen la vida local del sur de Chile. Corporación PLOC — Plan Desarrollo Integrado Puerto Octay.",
   keywords: ["Puerto Octay", "PLOC", "donaciones", "proyectos comunitarios", "Los Lagos", "Chile"],
   openGraph: {
-    type: "website",
-    locale: "es_CL",
-    siteName: "Corporación PLOC Puerto Octay",
+    type:      "website",
+    locale:    "es_CL",
+    siteName:  "Corporación PLOC Puerto Octay",
+    images: [
+      {
+        url:    "/images/hero-puerto-octay-2.jpg",
+        width:  1200,
+        height: 630,
+        alt:    "Corporación PLOC — Puerto Octay",
+      },
+    ],
+  },
+  twitter: {
+    card:  "summary_large_image",
+    images: ["/images/hero-puerto-octay-2.jpg"],
   },
 };
 
