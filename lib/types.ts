@@ -157,6 +157,9 @@ export interface SiteSettings {
   projectsSectionTitle: string;
   projectsSectionSubtitle: string;
   testimonial: Testimonial;
+  testimonialQuote: string;
+  testimonialName: string;
+  testimonialRole: string;
   transparencyTitle: string;
   transparencySubtitle: string;
   transparencyItems: TransparencyItem[];

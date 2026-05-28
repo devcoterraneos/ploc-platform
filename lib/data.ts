@@ -91,6 +91,9 @@ export const defaultSiteSettings: SiteSettings = {
   projectsSectionTitle: "Iniciativas que transforman nuestro territorio",
   projectsSectionSubtitle: "PROYECTOS DESTACADOS",
   testimonial: defaultTestimonial,
+  testimonialQuote: "Puerto Octay es más que un lugar, es nuestra casa. Cuidarlo y proyectarlo depende de todos nosotros.",
+  testimonialName: "Equipo Corporación Ploc",
+  testimonialRole: "Trabajando por Puerto Octay",
   transparencyTitle: "Tu aporte se usa con responsabilidad",
   transparencySubtitle:
     "Así distribuimos los recursos para maximizar el impacto en Puerto Octay.",

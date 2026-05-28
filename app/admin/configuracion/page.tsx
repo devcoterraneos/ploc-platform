@@ -35,6 +35,15 @@ const sections: SettingsSection[] = [
     ],
   },
   {
+    id: "testimonial",
+    label: "Cita destacada",
+    fields: [
+      { key: "testimonialQuote", label: "Texto de la cita",        type: "textarea" },
+      { key: "testimonialName",  label: "Nombre o fuente",         type: "text"     },
+      { key: "testimonialRole",  label: "Cargo o descripción",     type: "text"     },
+    ],
+  },
+  {
     id: "projects",
     label: "Sección proyectos",
     fields: [

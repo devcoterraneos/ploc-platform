@@ -4,8 +4,12 @@ import { useSettings } from "@/lib/settings-context";
 
 export default function LandingTestimonial() {
   const s = useSettings();
-  const t = s.testimonial;
-  const initials = t.name
+
+  const quote = s.testimonialQuote || s.testimonial.quote;
+  const name  = s.testimonialName  || s.testimonial.name;
+  const role  = s.testimonialRole  || s.testimonial.role;
+
+  const initials = name
     .split(" ")
     .filter((_, i) => i === 0 || i === 2)
     .map((w) => w[0])
@@ -18,12 +22,10 @@ export default function LandingTestimonial() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
           className="relative rounded-3xl px-8 py-10 lg:px-14 lg:py-14 overflow-hidden"
-          style={{ backgroundColor: "#8B1A1A" }}
+          style={{ backgroundColor: s.primaryColor }}
         >
           {/* Decorative large quote mark */}
-          <span
-            className="absolute top-4 left-6 text-[9rem] font-serif leading-none select-none pointer-events-none text-white/10"
-          >
+          <span className="absolute top-4 left-6 text-[9rem] font-serif leading-none select-none pointer-events-none text-white/10">
             &ldquo;
           </span>
 
@@ -34,7 +36,7 @@ export default function LandingTestimonial() {
             </span>
 
             <p className="text-xl lg:text-2xl text-white font-medium leading-relaxed mb-8 italic">
-              {t.quote}
+              {quote}
             </p>
 
             {/* Person */}
@@ -43,8 +45,8 @@ export default function LandingTestimonial() {
                 {initials}
               </div>
               <div>
-                <p className="text-sm font-bold text-white">{t.name}</p>
-                <p className="text-xs text-white/60">{t.role}</p>
+                <p className="text-sm font-bold text-white">{name}</p>
+                <p className="text-xs text-white/60">{role}</p>
               </div>
             </div>
           </div>
