@@ -43,7 +43,7 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: "Credenciales Flow no configuradas en el servidor" }), { status: 500, headers: corsHeaders });
     }
 
-    const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = env.SUPABASE_URL;
     const serviceKey  = env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceKey) {
