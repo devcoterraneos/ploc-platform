@@ -5,11 +5,13 @@ import Image from "next/image";
 import { Heart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { org } from "@/lib/landing-config";
+import { useSettings } from "@/lib/settings-context";
 
 export default function LandingHeader() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const isCampaignPage = pathname?.startsWith("/dona/") ?? false;
+  const s = useSettings();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 10);
@@ -34,7 +36,8 @@ export default function LandingHeader() {
           {!isCampaignPage && (
             <a
               href="#proyectos"
-              className="flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-colors"
+              className="flex items-center gap-2 text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-opacity hover:opacity-90"
+              style={{ backgroundColor: s.primaryColor }}
             >
               Donar
               <Heart className="w-4 h-4 fill-white" />
