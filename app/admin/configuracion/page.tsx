@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Save, ChevronDown, ChevronUp, Upload } from "lucide-react";
 import { defaultSiteSettings } from "@/lib/data";
 import { persistSettings } from "@/lib/settings-context";
+import supabase from "@/lib/supabase";
 
 type FieldType = "text" | "textarea" | "color" | "number" | "url" | "toggle" | "image-upload";
 
@@ -73,6 +74,35 @@ export default function ConfiguracionAdminPage() {
 
   const [openSections, setOpenSections] = useState<string[]>(["hero"]);
   const [saved, setSaved]               = useState(false);
+  const [loading, setLoading]           = useState(true);
+
+  // Carga los valores guardados desde Supabase al abrir la página
+  useEffect(() => {
+    async function loadSaved() {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("data")
+          .eq("id", 1)
+          .single();
+
+        if (!error && data?.data && Object.keys(data.data).length > 0) {
+          setSettings((prev) => ({ ...prev, ...(data.data as Record<string, string | boolean>) }));
+          setLoading(false);
+          return;
+        }
+      } catch { /* ignorar */ }
+
+      // Fallback: localStorage
+      try {
+        const raw = localStorage.getItem("ploc:site_settings");
+        if (raw) setSettings((prev) => ({ ...prev, ...JSON.parse(raw) }));
+      } catch { /* ignorar */ }
+
+      setLoading(false);
+    }
+    loadSaved();
+  }, []);
   const [uploading, setUploading]       = useState<string | null>(null);
   const [uploadField, setUploadField]   = useState<string | null>(null);
   const fileInputRef                    = useRef<HTMLInputElement>(null);
@@ -107,6 +137,15 @@ export default function ConfiguracionAdminPage() {
       setUploading(null);
       setUploadField(null);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24 text-gray-400">
+        <span className="w-5 h-5 border-2 border-[#8B1A1A] border-t-transparent rounded-full animate-spin mr-3" />
+        Cargando configuración…
+      </div>
+    );
   }
 
   return (
