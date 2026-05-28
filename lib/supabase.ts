@@ -1,15 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL  ?? "";
-const supabaseKey  = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+// Public values — anon key is safe to expose (protected by RLS policies).
+// Used as fallback when NEXT_PUBLIC_* vars are not injected during build.
+const FALLBACK_URL = "https://rypnsrviavrvwwbfncdc.supabase.co";
+const FALLBACK_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5cG5zcnZpYXZydnd3YmZuY2RjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MDg1NTEsImV4cCI6MjA5NTQ4NDU1MX0.V-JbeoZsHZA8DoUj2IOdWGYSWf7uh4i4sxaGuPBocWE";
 
-export const isConfigured = () => Boolean(supabaseUrl && supabaseKey);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL  || FALLBACK_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_KEY;
 
-// Use placeholder values during static export build (when env vars are absent).
-// isConfigured() guards all actual API calls so placeholders are never used at runtime.
-export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co",
-  supabaseKey || "placeholder-anon-key",
-);
-
+export const isConfigured = () => true;
+export const supabase = createClient(supabaseUrl, supabaseKey);
 export default supabase;
