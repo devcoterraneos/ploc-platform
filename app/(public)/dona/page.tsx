@@ -10,6 +10,7 @@ import {
 import { formatCLP } from "@/lib/data";
 import supabase from "@/lib/supabase";
 import DonationModal, { type ProjectForModal } from "@/components/landing/DonationModal";
+import { useSettings } from "@/lib/settings-context";
 
 type Campaign = {
   id: string;
@@ -65,6 +66,7 @@ function Skeleton() {
 }
 
 export default function DonaPage() {
+  const { primaryColor } = useSettings();
   const pathname    = usePathname();
   const slug        = pathname?.split("/")[2] ?? "";
   const [campaign, setCampaign] = useState<Campaign | null>(null);
@@ -105,13 +107,14 @@ export default function DonaPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
         <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
-          <Heart className="w-8 h-8 text-[#8B1A1A]" />
+          <Heart className="w-8 h-8" style={{ color: primaryColor }} />
         </div>
         <h1 className="text-xl font-bold text-gray-900 mb-2">Campaña no encontrada</h1>
         <p className="text-sm text-gray-500 mb-6">Esta campaña no existe o ya no está disponible.</p>
         <Link
           href="/#proyectos"
-          className="px-6 py-3 bg-[#8B1A1A] text-white rounded-xl font-semibold text-sm hover:bg-[#7A1616] transition-colors"
+          className="px-6 py-3 text-white rounded-xl font-semibold text-sm transition-colors"
+          style={{ backgroundColor: primaryColor }}
         >
           Ver todas las campañas
         </Link>
@@ -246,9 +249,9 @@ export default function DonaPage() {
                 <div className="mb-7">
                   <div className="flex items-center gap-2.5 mb-3">
                     <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                      <Wrench className="w-4 h-4 text-[#8B1A1A]" />
+                      <Wrench className="w-4 h-4" style={{ color: primaryColor }} />
                     </div>
-                    <h2 className="text-xs font-bold text-[#8B1A1A] uppercase tracking-widest">
+                    <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: primaryColor }}>
                       Uso de los recursos
                     </h2>
                   </div>
@@ -288,7 +291,7 @@ export default function DonaPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl lg:text-3xl font-bold text-[#8B1A1A] leading-none">
+                    <p className="text-2xl lg:text-3xl font-bold leading-none" style={{ color: primaryColor }}>
                       {pct}%
                     </p>
                     <p className="text-xs text-gray-400 mt-1">completado</p>
@@ -298,8 +301,8 @@ export default function DonaPage() {
                 {/* Progress bar */}
                 <div className="h-3 rounded-full bg-gray-100 overflow-hidden mb-3">
                   <div
-                    className="h-full bg-[#8B1A1A] rounded-full transition-all duration-700"
-                    style={{ width: `${pct}%` }}
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${pct}%`, backgroundColor: primaryColor }}
                   />
                 </div>
 
@@ -321,7 +324,8 @@ export default function DonaPage() {
                 {/* CTA */}
                 <button
                   onClick={() => setShowModal(true)}
-                  className="w-full flex items-center justify-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] active:scale-[0.98] text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-red-900/20 text-base mb-3"
+                  className="w-full flex items-center justify-center gap-2 active:scale-[0.98] text-white font-bold py-4 rounded-xl transition-all shadow-lg text-base mb-3"
+                  style={{ backgroundColor: primaryColor }}
                 >
                   <Heart className="w-5 h-5 fill-white" />
                   Donar ahora
@@ -361,8 +365,8 @@ export default function DonaPage() {
           <div className="flex-1 min-w-0">
             <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden mb-1">
               <div
-                className="h-full bg-[#8B1A1A] rounded-full"
-                style={{ width: `${pct}%` }}
+                className="h-full rounded-full"
+                style={{ width: `${pct}%`, backgroundColor: primaryColor }}
               />
             </div>
             <p className="text-xs text-gray-400">
@@ -371,7 +375,8 @@ export default function DonaPage() {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md shadow-red-900/20 text-sm flex-shrink-0"
+            className="flex items-center gap-2 text-white font-bold px-5 py-3 rounded-xl transition-colors shadow-md text-sm flex-shrink-0"
+            style={{ backgroundColor: primaryColor }}
           >
             <Heart className="w-4 h-4 fill-white" />
             Donar
