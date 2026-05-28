@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Download, RefreshCw } from "lucide-react";
+import { Search, Download, RefreshCw, CheckCircle } from "lucide-react";
 import { formatCLP } from "@/lib/data";
-import supabase, { isConfigured } from "@/lib/supabase";
+import supabase from "@/lib/supabase";
 
 type Donation = {
   id: string;
@@ -30,35 +30,64 @@ const statusColor: Record<string, string> = {
   cancelled: "bg-gray-100 text-gray-500",
 };
 
+type Tab = "completed" | "pending";
+
 export default function DonantesAdminPage() {
   const [donations, setDonations] = useState<Donation[]>([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState("");
+  const [tab, setTab]             = useState<Tab>("completed");
+  const [marking, setMarking]     = useState<string | null>(null);
 
   async function fetchDonations() {
-    if (!isConfigured()) { setLoading(false); return; }
     setLoading(true);
     const { data } = await supabase
       .from("donations")
       .select("id,commerce_order,campaign_name,donor_name,donor_email,amount,status,created_at,paid_at")
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(500);
     if (data) setDonations(data as Donation[]);
     setLoading(false);
   }
 
   useEffect(() => { fetchDonations(); }, []);
 
-  const filtered = donations.filter(
+  // Filtrar por pestaña activa
+  const byTab = donations.filter((d) =>
+    tab === "completed"
+      ? d.status === "completed"
+      : d.status !== "completed"
+  );
+
+  // Filtrar por búsqueda
+  const filtered = byTab.filter(
     (d) =>
       (d.donor_name ?? "").toLowerCase().includes(search.toLowerCase()) ||
       d.donor_email.toLowerCase().includes(search.toLowerCase()) ||
       (d.campaign_name ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalCompleted = filtered
+  const completedCount  = donations.filter((d) => d.status === "completed").length;
+  const pendingCount    = donations.filter((d) => d.status !== "completed").length;
+  const totalCompleted  = donations
     .filter((d) => d.status === "completed")
     .reduce((s, d) => s + d.amount, 0);
+
+  // Marcar manualmente como pagada
+  async function markAsPaid(donation: Donation) {
+    setMarking(donation.id);
+    const { error } = await supabase
+      .from("donations")
+      .update({ status: "completed", paid_at: new Date().toISOString() })
+      .eq("id", donation.id);
+
+    if (error) {
+      alert("Error al actualizar: " + error.message);
+    } else {
+      await fetchDonations();
+    }
+    setMarking(null);
+  }
 
   function exportCSV() {
     const rows = [
@@ -82,20 +111,20 @@ export default function DonantesAdminPage() {
 
   return (
     <div>
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Donantes</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {filtered.filter((d) => d.status === "completed").length} pagadas ·{" "}
-            {formatCLP(totalCompleted)} recaudado
+            {completedCount} pagadas · {formatCLP(totalCompleted)} recaudado
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={fetchDonations}
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
           <button
             onClick={exportCSV}
@@ -107,6 +136,43 @@ export default function DonantesAdminPage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 mb-5 bg-gray-100 p-1 rounded-xl w-fit">
+        <button
+          onClick={() => setTab("completed")}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+            tab === "completed"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Realizadas
+          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+            tab === "completed" ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"
+          }`}>
+            {completedCount}
+          </span>
+        </button>
+        <button
+          onClick={() => setTab("pending")}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+            tab === "pending"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Pendientes
+          {pendingCount > 0 && (
+            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+              tab === "pending" ? "bg-yellow-100 text-yellow-700" : "bg-gray-200 text-gray-500"
+            }`}>
+              {pendingCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Search */}
       <div className="flex gap-3 mb-5">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -120,6 +186,7 @@ export default function DonantesAdminPage() {
         </div>
       </div>
 
+      {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16 text-gray-400">
@@ -130,44 +197,87 @@ export default function DonantesAdminPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
-                  {["Donante", "Campaña", "Monto", "Fecha", "Estado"].map((h) => (
-                    <th key={h} className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">
+                  {[
+                    "Donante",
+                    "Campaña",
+                    "Monto",
+                    tab === "completed" ? "Fecha pago" : "Fecha creación",
+                    "Estado",
+                    ...(tab === "pending" ? ["Acción"] : []),
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap"
+                    >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((d, i) => (
-                  <tr
-                    key={d.id}
-                    className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${i === filtered.length - 1 ? "border-0" : ""}`}
-                  >
-                    <td className="px-5 py-4">
-                      <p className="font-semibold text-gray-900">{d.donor_name ?? "—"}</p>
-                      <p className="text-xs text-gray-400">{d.donor_email}</p>
-                    </td>
-                    <td className="px-5 py-4 text-gray-600 text-xs max-w-[140px] truncate">
-                      {d.campaign_name ?? "—"}
-                    </td>
-                    <td className="px-5 py-4 font-bold text-gray-900 whitespace-nowrap">
-                      {formatCLP(d.amount)}
-                    </td>
-                    <td className="px-5 py-4 text-gray-500 whitespace-nowrap text-xs">
-                      {new Date(d.created_at).toLocaleDateString("es-CL")}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${statusColor[d.status] ?? "bg-gray-100 text-gray-500"}`}>
-                        {statusLabel[d.status] ?? d.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((d, i) => {
+                  const dateStr = tab === "completed"
+                    ? (d.paid_at ? new Date(d.paid_at).toLocaleDateString("es-CL") : "—")
+                    : new Date(d.created_at).toLocaleDateString("es-CL");
+
+                  return (
+                    <tr
+                      key={d.id}
+                      className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${
+                        i === filtered.length - 1 ? "border-0" : ""
+                      }`}
+                    >
+                      <td className="px-5 py-4">
+                        <p className="font-semibold text-gray-900">{d.donor_name ?? "—"}</p>
+                        <p className="text-xs text-gray-400">{d.donor_email}</p>
+                      </td>
+                      <td className="px-5 py-4 text-gray-600 text-xs max-w-[140px] truncate">
+                        {d.campaign_name ?? "—"}
+                      </td>
+                      <td className="px-5 py-4 font-bold text-gray-900 whitespace-nowrap">
+                        {formatCLP(d.amount)}
+                      </td>
+                      <td className="px-5 py-4 text-gray-500 whitespace-nowrap text-xs">
+                        {dateStr}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                            statusColor[d.status] ?? "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {statusLabel[d.status] ?? d.status}
+                        </span>
+                      </td>
+                      {tab === "pending" && (
+                        <td className="px-5 py-4">
+                          {d.status === "pending" && (
+                            <button
+                              onClick={() => markAsPaid(d)}
+                              disabled={marking === d.id}
+                              title="Marcar como pagada manualmente"
+                              className="flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-100 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+                            >
+                              {marking === d.id ? (
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <CheckCircle className="w-3.5 h-3.5" />
+                              )}
+                              Marcar pagada
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             {filtered.length === 0 && (
-              <div className="text-center py-12 text-gray-400">
-                {donations.length === 0 ? "Aún no hay donaciones registradas." : "No se encontraron resultados."}
+              <div className="text-center py-12 text-gray-400 text-sm">
+                {tab === "completed"
+                  ? "Aún no hay donaciones completadas."
+                  : "No hay donaciones pendientes."}
               </div>
             )}
           </div>
