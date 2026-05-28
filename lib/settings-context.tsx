@@ -35,18 +35,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // Background sync with Supabase — localStorage already loaded above
   useEffect(() => {
     if (!isConfigured()) return;
-    supabase
-      .from("site_settings")
-      .select("data")
-      .eq("id", 1)
-      .single()
-      .then(({ data, error }) => {
+    async function sync() {
+      try {
+        const { data, error } = await supabase
+          .from("site_settings")
+          .select("data")
+          .eq("id", 1)
+          .single();
         if (!error && data?.data && Object.keys(data.data).length > 0) {
           setSettings({ ...defaultSiteSettings, ...data.data });
           localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data));
         }
-      })
-      .catch(() => { /* Supabase unavailable — localStorage state is fine */ });
+      } catch { /* Supabase unavailable — localStorage state is fine */ }
+    }
+    sync();
   }, []);
 
   return (

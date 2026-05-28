@@ -22,14 +22,11 @@ export default function GraciasPage() {
     // Verify real payment status from Flow via our Cloudflare Function
     fetch(`/api/flow/status?token=${encodeURIComponent(token)}`)
       .then((r) => r.json())
-      .then((data) => {
-        const s = data.status as PaymentState;
-        if (s === "completed" || s === "rejected" || s === "cancelled") {
-          setState(s);
-        } else {
-          // pending, unknown, or API error — show processing state
-          setState("pending");
-        }
+      .then((data: { status?: string }) => {
+        if (data.status === "completed") setState("success");
+        else if (data.status === "rejected") setState("rejected");
+        else if (data.status === "cancelled") setState("cancelled");
+        else setState("pending");
       })
       .catch(() => {
         // Network error or status endpoint unavailable — assume pending
