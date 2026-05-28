@@ -133,16 +133,13 @@ export default function CampanasAdminPage() {
       let imageUrl = editItem.image_url ?? "";
 
       if (imageFile) {
-        const ext = imageFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
-        const filename = `${editItem.id ?? Date.now()}.${ext}`;
-        const { data: up, error: upErr } = await supabase.storage
-          .from("campaign-images")
-          .upload(filename, imageFile, { upsert: true });
-        if (upErr) throw new Error(`Storage: ${upErr.message}`);
-        const { data: { publicUrl } } = supabase.storage
-          .from("campaign-images")
-          .getPublicUrl(up.path);
-        imageUrl = publicUrl;
+        const form = new FormData();
+        form.append("file", imageFile);
+        form.append("bucket", "campaign-images");
+        const upRes = await fetch("/api/upload", { method: "POST", body: form });
+        const upData = await upRes.json();
+        if (!upRes.ok || !upData.url) throw new Error(upData.error ?? "Error subiendo imagen");
+        imageUrl = upData.url;
       }
 
       const slug = editItem.slug?.trim() ||
