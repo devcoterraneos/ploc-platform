@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, XCircle, Clock } from "lucide-react";
+import { Heart, XCircle, Clock, AlertTriangle } from "lucide-react";
 import GraciasShare from "@/components/landing/GraciasShare";
 
-type PaymentState = "loading" | "success" | "cancelled" | "direct";
+type PaymentState = "loading" | "success" | "pending" | "rejected" | "cancelled" | "direct";
 
 export default function GraciasPage() {
   const [state, setState] = useState<PaymentState>("loading");
@@ -19,21 +19,37 @@ export default function GraciasPage() {
       return;
     }
 
-    // Verificar estado real consultando Supabase a través del token
-    // Por ahora distinguimos solo si vino de Flow (tiene token) vs acceso directo
-    // El webhook ya actualizó el estado en Supabase
-    setState("success");
+    // Verify real payment status from Flow via our Cloudflare Function
+    fetch(`/api/flow/status?token=${encodeURIComponent(token)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const s = data.status as PaymentState;
+        if (s === "completed" || s === "rejected" || s === "cancelled") {
+          setState(s);
+        } else {
+          // pending, unknown, or API error — show processing state
+          setState("pending");
+        }
+      })
+      .catch(() => {
+        // Network error or status endpoint unavailable — assume pending
+        setState("pending");
+      });
   }, []);
 
+  /* ── Loading ─────────────────────────────────────────────────────── */
   if (state === "loading") {
     return (
       <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#8B1A1A] border-t-transparent rounded-full animate-spin" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-[#8B1A1A] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-gray-400">Verificando pago…</p>
+        </div>
       </div>
     );
   }
 
-  // Acceso directo sin token — redirige al home
+  /* ── Direct access without token ─────────────────────────────────── */
   if (state === "direct") {
     return (
       <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center px-4">
@@ -58,7 +74,89 @@ export default function GraciasPage() {
     );
   }
 
-  // Vino de Flow — pago procesado (éxito o pendiente, el webhook confirma)
+  /* ── Rejected ─────────────────────────────────────────────────────── */
+  if (state === "rejected") {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center px-4">
+        <div className="max-w-sm w-full text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-8 h-8 text-red-500" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Pago rechazado</h1>
+          <p className="text-sm text-gray-500 mb-6">
+            Tu banco o medio de pago rechazó la transacción. Puedes intentarlo nuevamente.
+          </p>
+          <Link
+            href="/#proyectos"
+            className="inline-flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors"
+          >
+            Intentar de nuevo
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Cancelled ────────────────────────────────────────────────────── */
+  if (state === "cancelled") {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center px-4">
+        <div className="max-w-sm w-full text-center">
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-8 h-8 text-gray-400" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Pago cancelado</h1>
+          <p className="text-sm text-gray-500 mb-6">
+            Cancelaste el proceso de pago. Si fue un error, puedes intentarlo nuevamente.
+          </p>
+          <Link
+            href="/#proyectos"
+            className="inline-flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors"
+          >
+            Ver campañas
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Pending (processing) ─────────────────────────────────────────── */
+  if (state === "pending") {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center px-4 py-16">
+        <div className="max-w-lg w-full text-center">
+          <div className="w-20 h-20 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center mx-auto mb-6">
+            <Clock className="w-10 h-10 text-amber-500" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+            Pago en procesamiento
+          </h1>
+          <p className="text-gray-500 text-lg mb-2">
+            Tu transacción está siendo verificada.
+          </p>
+          <p className="text-gray-400 text-sm mb-8">
+            Flow puede demorar unos minutos en confirmar el pago. Si lo realizaste correctamente,
+            recibirás un email de confirmación de Flow y de Corporación PLOC.
+          </p>
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 mb-8 text-left">
+            <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700 leading-relaxed">
+              Si pagaste con transferencia, el procesamiento puede tomar hasta 24 horas.
+              Tu donación quedará registrada automáticamente al confirmarse.
+            </p>
+          </div>
+          <Link
+            href="/#proyectos"
+            className="inline-block text-sm text-gray-400 hover:text-[#8B1A1A] transition-colors"
+          >
+            Ver más proyectos →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Success ─────────────────────────────────────────────────────── */
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center px-4 py-16">
       <div className="max-w-lg w-full text-center">
@@ -78,15 +176,6 @@ export default function GraciasPage() {
           Recibirás un correo de confirmación con los detalles de tu aporte.
           Tu contribución apoya directamente proyectos en Puerto Octay.
         </p>
-
-        {/* Processing note */}
-        <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 mb-6 text-left">
-          <Clock className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-700 leading-relaxed">
-            La confirmación del pago puede demorar unos minutos. Si realizaste el pago correctamente,
-            recibirás un email de confirmación de Flow y de Corporación PLOC.
-          </p>
-        </div>
 
         {/* Quote */}
         <div className="bg-red-50 rounded-2xl p-6 mb-10 border border-red-100">
