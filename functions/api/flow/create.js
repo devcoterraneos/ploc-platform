@@ -48,7 +48,9 @@ export async function onRequestPost(context) {
 
     if (!supabaseUrl || !serviceKey) {
       console.error("Supabase credentials missing. URL:", !!supabaseUrl, "SERVICE_KEY:", !!serviceKey);
-      return new Response(JSON.stringify({ error: "Variables de entorno de Supabase no configuradas" }), { status: 500, headers: corsHeaders });
+      return new Response(JSON.stringify({
+        error: `Config incompleta — URL:${supabaseUrl ? "OK" : "FALTA"} / SERVICE_KEY:${serviceKey ? "OK" : "FALTA"}`,
+      }), { status: 500, headers: corsHeaders });
     }
 
     const commerceOrder = `PLOC-${Date.now()}`;
