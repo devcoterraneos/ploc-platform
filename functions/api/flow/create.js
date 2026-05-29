@@ -22,7 +22,9 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   const origin      = request.headers.get("Origin") ?? "";
-  const allowOrigin = origin.includes("corporacionploc") ? origin : "https://corporacionploc.pages.dev";
+  const allowOrigin = (origin.includes("corporacionploc") || origin.includes("kellucausas.com"))
+    ? origin
+    : "https://ploc.kellucausas.com";
   const corsHeaders = {
     "Access-Control-Allow-Origin": allowOrigin,
     "Content-Type": "application/json",
@@ -41,7 +43,7 @@ export async function onRequestPost(context) {
     // ── 0. Validate env vars up front ─────────────────────────────────────────
     const apiKey    = env.FLOW_API_KEY;
     const secretKey = env.FLOW_SECRET_KEY;
-    const baseUrl   = env.NEXT_PUBLIC_BASE_URL ?? "https://corporacionploc.pages.dev";
+    const baseUrl   = env.NEXT_PUBLIC_BASE_URL ?? "https://ploc.kellucausas.com";
 
     if (!apiKey || !secretKey) {
       console.error("Flow credentials missing. FLOW_API_KEY:", !!apiKey, "FLOW_SECRET_KEY:", !!secretKey);
@@ -150,7 +152,9 @@ export async function onRequestPost(context) {
 // Handle CORS preflight
 export async function onRequestOptions(context) {
   const origin      = context.request.headers.get("Origin") ?? "";
-  const allowOrigin = origin.includes("corporacionploc") ? origin : "https://corporacionploc.pages.dev";
+  const allowOrigin = (origin.includes("corporacionploc") || origin.includes("kellucausas.com"))
+    ? origin
+    : "https://ploc.kellucausas.com";
   return new Response(null, {
     headers: {
       "Access-Control-Allow-Origin":  allowOrigin,
