@@ -6,6 +6,7 @@ import LandingProjects from "@/components/landing/LandingProjects";
 import LandingTestimonial from "@/components/landing/LandingTestimonial";
 import LandingMembership from "@/components/landing/LandingMembership";
 import LandingTransparency from "@/components/landing/LandingTransparency";
+import LandingPartners from "@/components/landing/LandingPartners";
 
 export default function HomePage() {
   const s = useSettings();
@@ -32,6 +33,8 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      <LandingPartners />
     </>
   );
 }
