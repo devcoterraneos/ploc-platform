@@ -80,8 +80,19 @@ export default function LandingFooter() {
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-100">
+        <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center gap-1.5">
           <p className="text-xs text-gray-400 text-center">{org.copyright}</p>
+          <p className="text-xs text-gray-400 text-center">
+            Plataforma creada por{" "}
+            <a
+              href="https://www.kellucausas.com/lab"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-gray-500 hover:text-[#8B1A1A] transition-colors underline underline-offset-2"
+            >
+              Kellü Lab
+            </a>
+          </p>
         </div>
       </div>
     </footer>

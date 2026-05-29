@@ -2,23 +2,26 @@
 
 const partners = [
   {
-    name: "Coterráneos",
-    logo: "https://coterraneos.cl/wp-content/uploads/2023/05/coterraneos_azul.png",
-    url:  "https://coterraneos.cl",
+    name:    "Coterráneos",
+    logo:    "https://coterraneos.cl/wp-content/uploads/2023/05/coterraneos_azul.png",
+    url:     "https://coterraneos.cl",
+    height:  "h-10 lg:h-12",
   },
   {
-    name: "Comunidad",
-    logo: "https://comunidad-org.cl/wp-content/uploads/2024/11/Logo-Comunidad-Naranjo.png",
-    url:  "https://comunidad-org.cl",
+    name:    "Comunidad",
+    logo:    "https://comunidad-org.cl/wp-content/uploads/2024/11/Logo-Comunidad-Naranjo.png",
+    url:     "https://comunidad-org.cl",
+    height:  "h-10 lg:h-12",
   },
   {
-    name: "Kellu Causas",
-    logo: "https://kellucausas.com/assets/kellu-logo-CqbT6UE0.png",
-    url:  "https://kellucausas.com",
+    name:    "Kellu Causas",
+    logo:    "https://kellucausas.com/assets/kellu-logo-CqbT6UE0.png",
+    url:     "https://kellucausas.com",
+    height:  "h-7 lg:h-9",
   },
 ];
 
-function LogoItem({ partner, size = "md" }: { partner: typeof partners[0]; size?: "md" | "lg" }) {
+function LogoItem({ partner }: { partner: typeof partners[0] }) {
   return (
     <a
       href={partner.url}
@@ -30,7 +33,7 @@ function LogoItem({ partner, size = "md" }: { partner: typeof partners[0]; size?
       <img
         src={partner.logo}
         alt={partner.name}
-        className={size === "lg" ? "h-10 lg:h-12 w-auto max-w-[160px] object-contain" : "h-9 w-auto max-w-[130px] object-contain"}
+        className={`${partner.height} w-auto max-w-[150px] object-contain`}
         loading="lazy"
       />
     </a>
@@ -63,7 +66,7 @@ export default function LandingPartners() {
         {/* ── Desktop: fila estática ─────────────────────────────────────── */}
         <div className="hidden sm:flex items-center justify-center gap-14 lg:gap-20">
           {partners.map((p) => (
-            <LogoItem key={p.name} partner={p} size="lg" />
+            <LogoItem key={p.name} partner={p} />
           ))}
         </div>
 
@@ -77,7 +80,7 @@ export default function LandingPartners() {
             {/* Track — duplicated for seamless loop */}
             <div className="ploc-marquee-track flex items-center gap-12 w-max">
               {[...partners, ...partners, ...partners].map((p, i) => (
-                <LogoItem key={`${p.name}-${i}`} partner={p} size="md" />
+                <LogoItem key={`${p.name}-${i}`} partner={p} />
               ))}
             </div>
           </div>
