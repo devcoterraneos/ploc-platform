@@ -28,7 +28,7 @@ export default function LandingHeader() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <a href="#inicio">
+          <a href="/">
             <Image src={org.logo} alt={org.name} width={120} height={54} priority />
           </a>
 
