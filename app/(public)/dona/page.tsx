@@ -234,36 +234,23 @@ export default function DonaPage() {
         </div>
 
         {/* ── Main grid ── */}
+        {/*
+          Mobile order:  1-description  2-trust  3-card  4-resources
+          Desktop order: col1=description+resources+trust  col2=card
+        */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-10 lg:gap-14 items-start">
+          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_340px] lg:grid-rows-[auto_auto_auto] lg:gap-x-14 lg:gap-y-8 lg:items-start">
 
-            {/* ── LEFT: narrative ── */}
-            <div>
-              {campaign.short_description && (
-                <p className="text-lg lg:text-xl text-gray-700 leading-relaxed mb-8 font-medium">
-                  {campaign.short_description}
-                </p>
-              )}
+            {/* ── 1. Description ── mobile:order-1 / desktop:col1 row1 ── */}
+            {campaign.short_description && (
+              <p className="order-1 lg:col-start-1 lg:row-start-1 text-lg lg:text-xl text-gray-700 leading-relaxed font-medium">
+                {campaign.short_description}
+              </p>
+            )}
 
-              {campaign.resources_use && (
-                <div className="mb-7">
-                  <div className="flex items-center gap-2.5 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                      <Wrench className="w-4 h-4" style={{ color: primaryColor }} />
-                    </div>
-                    <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: primaryColor }}>
-                      Uso de los recursos
-                    </h2>
-                  </div>
-                  <p className="text-gray-700 leading-relaxed pl-[52px]">
-                    {campaign.resources_use}
-                  </p>
-                </div>
-              )}
-
-              <hr className="border-gray-100 mt-6 mb-5" />
-
-              {/* Trust signals */}
+            {/* ── 2. Trust signals ── mobile:order-2 / desktop:col1 row3 ── */}
+            <div className="order-2 lg:col-start-1 lg:row-start-3">
+              <hr className="border-gray-100 mb-4" />
               <div className="flex flex-wrap gap-x-6 gap-y-2">
                 <span className="flex items-center gap-2 text-sm text-gray-400">
                   <Shield className="w-4 h-4 text-green-500 flex-shrink-0" />
@@ -276,8 +263,8 @@ export default function DonaPage() {
               </div>
             </div>
 
-            {/* ── RIGHT: donation card (sticky) ── */}
-            <div className="lg:sticky lg:top-6">
+            {/* ── 3. Donation card ── mobile:order-3 / desktop:col2 rows1-3 ── */}
+            <div className="order-3 lg:col-start-2 lg:row-start-1 lg:row-span-3 lg:sticky lg:top-6">
               <div className="bg-white rounded-2xl border border-gray-200 shadow-xl shadow-gray-200/60 p-6">
 
                 {/* Numbers */}
@@ -354,6 +341,23 @@ export default function DonaPage() {
                 </p>
               </div>
             </div>
+
+            {/* ── 4. Resources ── mobile:order-4 / desktop:col1 row2 ── */}
+            {campaign.resources_use && (
+              <div className="order-4 lg:col-start-1 lg:row-start-2">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                    <Wrench className="w-4 h-4" style={{ color: primaryColor }} />
+                  </div>
+                  <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: primaryColor }}>
+                    Uso de los recursos
+                  </h2>
+                </div>
+                <p className="text-gray-700 leading-relaxed pl-[52px]">
+                  {campaign.resources_use}
+                </p>
+              </div>
+            )}
 
           </div>
         </div>
