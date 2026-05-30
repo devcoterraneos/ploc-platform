@@ -36,7 +36,7 @@ type TransferStep = "data" | "form" | "thanks";
 
 // ─── Bank details (dynamic — includes campaign name as Asunto) ────────────────
 
-function getBankLines(campaignName?: string) {
+function getBankLines() {
   return [
     "Corporación Plan Desarrollo Integrado Puerto Octay",
     "RUT: 65.165.003-8",
@@ -44,7 +44,6 @@ function getBankLines(campaignName?: string) {
     "N° 2680467305",
     "Banco de Chile",
     "apola@corporacionploc.org",
-    ...(campaignName ? [`Asunto: ${campaignName}`] : []),
   ];
 }
 
@@ -156,10 +155,10 @@ function StepMethod({ color, onSelect }: { color: string; onSelect: (m: "card" |
 // ─── Transfer Step 1: Datos bancarios ─────────────────────────────────────────
 
 function StepTransferData({
-  color, campaignName, onBack, onNext,
-}: { color: string; campaignName?: string; onBack: () => void; onNext: () => void }) {
+  color, onBack, onNext,
+}: { color: string; onBack: () => void; onNext: () => void }) {
   const [copied, setCopied] = useState(false);
-  const bankLines = getBankLines(campaignName);
+  const bankLines = getBankLines();
 
   async function handleCopy() {
     const text = bankLines.join("\n");
@@ -209,12 +208,6 @@ function StepTransferData({
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Correo</p>
             <p className="text-sm font-semibold text-gray-800">apola@corporacionploc.org</p>
           </div>
-          {campaignName && (
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Asunto</p>
-              <p className="text-sm font-semibold" style={{ color }}>{campaignName}</p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -604,7 +597,6 @@ export default function DonationModal({ project, onClose, initialStep = 1, initi
           {method === "transfer" && transferStep === "data" && (
             <StepTransferData
               color={primaryColor}
-              campaignName={project.name}
               onBack={() => setMethod(null)}
               onNext={() => setTransferStep("form")}
             />
