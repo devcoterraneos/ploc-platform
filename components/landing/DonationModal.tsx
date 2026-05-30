@@ -25,6 +25,7 @@ interface DonationModalProps {
   project: ProjectForModal | null;
   onClose: () => void;
   initialStep?: 1 | 2;
+  initialMethod?: "card" | "transfer";
 }
 
 type PayMethod = "card" | "transfer" | null;
@@ -512,11 +513,11 @@ function Step3({ project, amount, color, form, onChange, onBack }: {
 
 // ─── Modal wrapper ─────────────────────────────────────────────────────────────
 
-export default function DonationModal({ project, onClose, initialStep = 1 }: DonationModalProps) {
+export default function DonationModal({ project, onClose, initialStep = 1, initialMethod }: DonationModalProps) {
   const { primaryColor } = useSettings();
   const twoStep = initialStep === 2;
 
-  const [method, setMethod]             = useState<PayMethod>(null);
+  const [method, setMethod]             = useState<PayMethod>(initialMethod ?? null);
   const [step, setStep]                 = useState<1 | 2 | 3>(initialStep);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
@@ -525,13 +526,13 @@ export default function DonationModal({ project, onClose, initialStep = 1 }: Don
   // Reset everything when modal opens/closes
   useEffect(() => {
     if (project) {
-      setMethod(null);
+      setMethod(initialMethod ?? null);
       setStep(initialStep);
       setSelectedAmount(null);
       setCustomAmount("");
       setForm({ name: "", email: "", phone: "", newsletter: true });
     }
-  }, [project, initialStep]);
+  }, [project, initialStep, initialMethod]);
 
   useEffect(() => {
     document.body.style.overflow = project ? "hidden" : "";

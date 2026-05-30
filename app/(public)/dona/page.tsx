@@ -72,7 +72,8 @@ export default function DonaPage() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal]         = useState(false);
+  const [modalMethod, setModalMethod]     = useState<"card" | "transfer" | undefined>(undefined);
   const [copied, setCopied]     = useState(false);
   const [carouselIdx, setCarouselIdx] = useState(0);
 
@@ -308,15 +309,31 @@ export default function DonaPage() {
                   </div>
                 )}
 
-                {/* CTA */}
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="w-full flex items-center justify-center gap-2 active:scale-[0.98] text-white font-bold py-4 rounded-xl transition-all shadow-lg text-base mb-3"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  <Heart className="w-5 h-5 fill-white" />
-                  Donar ahora
-                </button>
+                {/* CTAs */}
+                <div className="flex flex-col gap-2.5 mb-3">
+                  {/* Tarjeta */}
+                  <button
+                    onClick={() => { setModalMethod("card"); setShowModal(true); }}
+                    className="w-full flex flex-col items-center justify-center active:scale-[0.98] text-white rounded-xl transition-all shadow-lg py-3"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <span className="font-bold text-base flex items-center gap-2">
+                      <Heart className="w-4 h-4 fill-white" />
+                      Donar con tarjeta
+                    </span>
+                    <span className="text-xs opacity-80 mt-0.5">débito, crédito</span>
+                  </button>
+
+                  {/* Transferencia */}
+                  <button
+                    onClick={() => { setModalMethod("transfer"); setShowModal(true); }}
+                    className="w-full flex flex-col items-center justify-center rounded-xl border-2 transition-all py-3"
+                    style={{ borderColor: primaryColor, color: primaryColor }}
+                  >
+                    <span className="font-bold text-base">Donar via transferencia</span>
+                    <span className="text-xs opacity-70 mt-0.5">click para ver los datos</span>
+                  </button>
+                </div>
 
                 {/* Share */}
                 <button
@@ -391,8 +408,9 @@ export default function DonaPage() {
       {/* Donation modal — starts at step 2 (skip campaign info) */}
       <DonationModal
         project={showModal ? toModal(campaign) : null}
-        onClose={() => setShowModal(false)}
+        onClose={() => { setShowModal(false); setModalMethod(undefined); }}
         initialStep={2}
+        initialMethod={modalMethod}
       />
     </>
   );
