@@ -267,7 +267,7 @@ export default function DonaPage() {
               <div className="flex flex-wrap gap-x-6 gap-y-2">
                 <span className="flex items-center gap-2 text-sm text-gray-400">
                   <Shield className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  Pago seguro vía Flow
+                  Pago vía Tarjeta o Transferencia, tú eliges
                 </span>
                 <span className="flex items-center gap-2 text-sm text-gray-400">
                   <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
