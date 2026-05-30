@@ -147,7 +147,7 @@ function StepMethod({ color, onSelect }: { color: string; onSelect: (m: "card" |
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-gray-900 text-base">Con tarjeta</p>
-            <p className="text-sm text-gray-400 mt-0.5">Débito, crédito o prepago · Vía Flow</p>
+            <p className="text-sm text-gray-400 mt-0.5">Débito, crédito o prepago</p>
           </div>
           <ChevronRight className="w-5 h-5 text-gray-300 flex-shrink-0" />
         </button>
@@ -494,7 +494,7 @@ function Step3({ project, amount, color, form, onChange, onBack }: {
           ) : (
             <>
               <Heart className="w-4 h-4 fill-current" />
-              Ir a Donar con Flow
+              Ir a pagar
             </>
           )}
         </button>
