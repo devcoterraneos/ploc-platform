@@ -188,12 +188,20 @@ export default function GraciasPage() {
         {/* Share */}
         <GraciasShare />
 
-        <Link
-          href="/#proyectos"
-          className="inline-block mt-6 text-sm text-gray-400 hover:text-[#8B1A1A] transition-colors"
-        >
-          Ver más proyectos →
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+          <Link
+            href="/"
+            className="px-6 py-3 bg-[#8B1A1A] hover:bg-[#7A1616] text-white font-semibold rounded-xl text-sm transition-colors"
+          >
+            Volver al inicio
+          </Link>
+          <Link
+            href="/#proyectos"
+            className="px-6 py-3 border border-gray-200 text-gray-500 hover:text-[#8B1A1A] hover:border-[#8B1A1A] font-medium rounded-xl text-sm transition-colors"
+          >
+            Ver más proyectos
+          </Link>
+        </div>
       </div>
     </div>
   );
