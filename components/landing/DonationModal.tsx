@@ -255,11 +255,18 @@ function StepTransfer({ color, onBack }: { color: string; onBack: () => void }) 
         )}
       </button>
 
-      {/* Note */}
-      <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-5">
-        <p className="text-xs text-amber-700 leading-relaxed text-center">
-          🕐 Al final del día actualizaremos el cómputo de la campaña con tu aporte.
-        </p>
+      {/* Notes */}
+      <div className="space-y-2 mb-5">
+        <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+          <p className="text-xs text-amber-700 leading-relaxed text-center">
+            🕐 Al final del día actualizaremos el cómputo de la campaña con tu aporte.
+          </p>
+        </div>
+        <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+          <p className="text-xs text-amber-700 leading-relaxed text-center">
+            📝 Recuerda poner el nombre de la organización que estás apoyando en el comentario de la transferencia.
+          </p>
+        </div>
       </div>
 
       {/* Back */}
