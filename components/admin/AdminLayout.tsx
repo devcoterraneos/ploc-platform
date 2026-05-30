@@ -14,17 +14,19 @@ import {
   ExternalLink,
   Menu,
   LogOut,
+  ArrowDownToLine,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import supabase from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 const navItems = [
-  { href: "/admin",              label: "Dashboard",     icon: LayoutDashboard, exact: true },
-  { href: "/admin/campanas",     label: "Campañas",      icon: Megaphone },
-  { href: "/admin/donantes",     label: "Donantes",      icon: Heart },
-  { href: "/admin/socios",       label: "Socios",        icon: Users },
-  { href: "/admin/configuracion",label: "Configuración", icon: Settings },
+  { href: "/admin",                  label: "Dashboard",      icon: LayoutDashboard, exact: true },
+  { href: "/admin/campanas",         label: "Campañas",       icon: Megaphone },
+  { href: "/admin/donantes",         label: "Donantes",       icon: Heart },
+  { href: "/admin/transferencias",   label: "Transferencias", icon: ArrowDownToLine },
+  { href: "/admin/socios",           label: "Socios",         icon: Users },
+  { href: "/admin/configuracion",    label: "Configuración",  icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
