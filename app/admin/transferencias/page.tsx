@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { RefreshCw, CheckCircle, XCircle, Clock, ArrowDownToLine } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle, Clock, ArrowDownToLine, Plus, X, Save } from "lucide-react";
 import { formatCLP } from "@/lib/data";
 import supabase, { isConfigured } from "@/lib/supabase";
+
+type Campaign = { id: string; name: string };
 
 type Transfer = {
   id: string;
@@ -17,6 +19,29 @@ type Transfer = {
   status: string;
 };
 
+const emptyForm = {
+  campaign_id:   "",
+  campaign_name: "",
+  donor_name:    "",
+  donor_email:   "",
+  amount:        "",
+  payment_date:  new Date().toISOString().split("T")[0],
+  reference:     "",
+};
+
+const INPUT = "w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#8B1A1A]";
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-700 mb-1">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
+
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
   transfer_pending: { label: "Pendiente", cls: "bg-amber-50 text-amber-700" },
   completed:        { label: "Validada",  cls: "bg-green-50 text-green-700" },
@@ -24,24 +49,84 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
 };
 
 export default function TransferenciasPage() {
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading,   setLoading]   = useState(true);
-  const [acting,    setActing]    = useState<string | null>(null); // id in progress
+  const [acting,    setActing]    = useState<string | null>(null);
+  const [showForm,  setShowForm]  = useState(false);
+  const [saving,    setSaving]    = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [form,      setForm]      = useState({ ...emptyForm });
+
+  function f<K extends keyof typeof emptyForm>(key: K, value: typeof emptyForm[K]) {
+    setForm(p => ({ ...p, [key]: value }));
+  }
+
+  function formatInput(raw: string) {
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) return "";
+    return new Intl.NumberFormat("es-CL").format(parseInt(digits, 10));
+  }
 
   async function fetchData() {
     if (!isConfigured()) { setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase
-      .from("donations")
-      .select("id,commerce_order,donor_name,donor_email,amount,campaign_id,campaign_name,payment_date,status")
-      .like("commerce_order", "TRANSFER-%")
-      .order("payment_date", { ascending: false })
-      .limit(100);
-    if (data) setTransfers(data as Transfer[]);
+    const [{ data: camps }, { data: txs }] = await Promise.all([
+      supabase.from("campaigns").select("id,name").eq("status", "active").order("sort_order"),
+      supabase
+        .from("donations")
+        .select("id,commerce_order,donor_name,donor_email,amount,campaign_id,campaign_name,payment_date,status")
+        .like("commerce_order", "TRANSFER-%")
+        .order("payment_date", { ascending: false })
+        .limit(100),
+    ]);
+    if (camps) setCampaigns(camps);
+    if (txs)   setTransfers(txs as Transfer[]);
     setLoading(false);
   }
 
   useEffect(() => { fetchData(); }, []);
+
+  // ── Manual save ──────────────────────────────────────────────────────────
+  async function handleSave() {
+    const amount = Number(String(form.amount).replace(/\D/g, ""));
+    if (!form.campaign_id || !form.donor_name.trim() || !amount) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const camp = campaigns.find(c => c.id === form.campaign_id);
+      const { error: insErr } = await supabase.from("donations").insert({
+        commerce_order: `TRANSFER-MANUAL-${Date.now()}`,
+        campaign_id:    form.campaign_id,
+        campaign_name:  camp?.name ?? "",
+        donor_name:     form.donor_name.trim(),
+        donor_email:    form.donor_email.trim() || null,
+        amount,
+        status:         "completed",
+        payment_date:   form.payment_date,
+        paid_at:        new Date(form.payment_date).toISOString(),
+        flow_raw:       { source: "manual_admin", reference: form.reference.trim() || null },
+      });
+      if (insErr) throw new Error(insErr.message);
+
+      // Increment raised
+      const { data: campData } = await supabase.from("campaigns").select("raised").eq("id", form.campaign_id).single();
+      if (campData) {
+        await supabase.from("campaigns").update({ raised: (campData.raised ?? 0) + amount }).eq("id", form.campaign_id);
+      }
+
+      setForm({ ...emptyForm, payment_date: new Date().toISOString().split("T")[0] });
+      setShowForm(false);
+      await fetchData();
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : "Error desconocido");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const isFormValid = !!form.campaign_id && !!form.donor_name.trim() &&
+    Number(String(form.amount).replace(/\D/g, "")) >= 1;
 
   async function handleValidate(t: Transfer) {
     setActing(t.id);
@@ -82,9 +167,17 @@ export default function TransferenciasPage() {
             {pending.length} pendiente{pending.length !== 1 ? "s" : ""} de validación
           </p>
         </div>
-        <button onClick={fetchData} className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
-          <RefreshCw className="w-4 h-4 text-gray-500" />
-        </button>
+        <div className="flex gap-2">
+          <button onClick={fetchData} className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
+            <RefreshCw className="w-4 h-4 text-gray-500" />
+          </button>
+          <button
+            onClick={() => { setShowForm(true); setSaveError(null); }}
+            className="flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Registrar manual
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -207,6 +300,62 @@ export default function TransferenciasPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* ── Manual registration modal ── */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+              <h2 className="text-lg font-bold text-gray-900">Registrar transferencia manual</h2>
+              <button onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-gray-100"><X className="w-4 h-4" /></button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+              <Field label="Campaña" required>
+                <select value={form.campaign_id}
+                  onChange={e => { const c = campaigns.find(x => x.id === e.target.value); f("campaign_id", e.target.value); f("campaign_name", c?.name ?? ""); }}
+                  className={`${INPUT} bg-white`}>
+                  <option value="">— Selecciona una campaña —</option>
+                  {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </Field>
+              <Field label="Nombre y apellido" required>
+                <input type="text" value={form.donor_name} onChange={e => f("donor_name", e.target.value)} className={INPUT} placeholder="Nombre y apellido" />
+              </Field>
+              <Field label="Email (opcional)">
+                <input type="email" value={form.donor_email} onChange={e => f("donor_email", e.target.value)} className={INPUT} placeholder="correo@ejemplo.com" />
+              </Field>
+              <Field label="Monto ($)" required>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">$</span>
+                  <input type="text" inputMode="numeric" value={form.amount}
+                    onChange={e => f("amount", formatInput(e.target.value))} className={`${INPUT} pl-7`} placeholder="0" />
+                </div>
+              </Field>
+              <Field label="Fecha de transferencia" required>
+                <input type="date" value={form.payment_date} onChange={e => f("payment_date", e.target.value)} className={INPUT} />
+              </Field>
+              <Field label="Referencia / N° comprobante (opcional)">
+                <input type="text" value={form.reference} onChange={e => f("reference", e.target.value)} className={INPUT} placeholder="Ej: 123456789 / Banco de Chile" />
+              </Field>
+            </div>
+
+            <div className="px-6 pb-5 pt-3 border-t border-gray-100 flex-shrink-0">
+              {saveError && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-3">{saveError}</p>}
+              <div className="flex gap-3">
+                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 text-sm font-medium border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={handleSave} disabled={!isFormValid || saving}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold bg-[#8B1A1A] text-white rounded-xl hover:bg-[#7A1616] transition-colors disabled:opacity-50">
+                  <Save className="w-4 h-4" />
+                  {saving ? "Guardando..." : "Registrar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
