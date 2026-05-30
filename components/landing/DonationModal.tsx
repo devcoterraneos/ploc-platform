@@ -32,11 +32,12 @@ type PayMethod = "card" | "transfer" | null;
 // ─── Bank details ─────────────────────────────────────────────────────────────
 
 const BANK_LINES = [
-  "Banco de Chile",
-  "Cuenta Corriente N° 2680467305",
-  "RUT: 65.165.003-8",
   "Corporación Plan Desarrollo Integrado Puerto Octay",
-  "Email: apola@corporacionploc.org",
+  "RUT: 65.165.003-8",
+  "Cuenta Corriente",
+  "N° 2680467305",
+  "Banco de Chile",
+  "apola@corporacionploc.org",
 ];
 const BANK_TEXT = BANK_LINES.join("\n");
 
@@ -206,31 +207,30 @@ function StepTransfer({ color, onBack }: { color: string; onBack: () => void }) 
       {/* Bank data card */}
       <div className="bg-gray-50 rounded-2xl border border-gray-200 p-5 mb-4">
         <div className="space-y-3">
-          {/* Bank */}
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Banco</p>
-            <p className="text-sm font-semibold text-gray-800">Banco de Chile</p>
-          </div>
-          {/* Account type + number */}
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Cuenta Corriente</p>
-            <p className="text-sm font-semibold text-gray-800">2680467305</p>
-          </div>
-          {/* RUT */}
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">RUT</p>
-            <p className="text-sm font-semibold text-gray-800">65.165.003-8</p>
-          </div>
-          {/* Name */}
           <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Nombre</p>
             <p className="text-sm font-semibold text-gray-800 leading-snug">
               Corporación Plan Desarrollo Integrado Puerto Octay
             </p>
           </div>
-          {/* Email */}
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Email</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">RUT</p>
+            <p className="text-sm font-semibold text-gray-800">65.165.003-8</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Tipo de cuenta</p>
+            <p className="text-sm font-semibold text-gray-800">Cuenta Corriente</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Número de cuenta</p>
+            <p className="text-sm font-semibold text-gray-800">2680467305</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Banco</p>
+            <p className="text-sm font-semibold text-gray-800">Banco de Chile</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Correo</p>
             <p className="text-sm font-semibold text-gray-800">apola@corporacionploc.org</p>
           </div>
         </div>
