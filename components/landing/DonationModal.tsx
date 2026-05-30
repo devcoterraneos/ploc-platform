@@ -228,12 +228,12 @@ function StepTransferData({
       {/* CTA to form */}
       <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 mb-5">
         <p className="text-sm text-gray-600 leading-relaxed text-center mb-3">
-          Para validar tu aporte, completa un breve formulario de registro.
+          Después de transferir te pedimos que nos avises para registrar tu donación.
         </p>
         <button onClick={onNext}
           className="w-full flex items-center justify-center gap-2 text-white font-bold py-3 rounded-xl text-sm transition-all"
           style={{ backgroundColor: color }}>
-          Registrar donación
+          Avisé que deposité
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -310,7 +310,7 @@ function StepTransferForm({
           </div>
         </div>
 
-        <input type="text" placeholder="Tu nombre completo *" value={donorName}
+        <input type="text" placeholder="Nombre y apellido *" value={donorName}
           onChange={e => setDonorName(e.target.value)} className={inputCls} />
 
         <input type="email" placeholder="Tu email *" value={donorEmail}
@@ -504,7 +504,7 @@ function Step3({ project, amount, color, form, onChange, onBack }: {
       <h2 className="text-lg font-bold text-gray-900 mb-1">Tus datos</h2>
       <p className="text-sm text-gray-500 mb-5">Para procesar tu donación necesitamos estos datos.</p>
       <div className="flex flex-col gap-3 mb-5">
-        <input type="text" placeholder="Tu nombre completo *" value={form.name} onChange={e => onChange({ name: e.target.value })} className={inputCls} />
+        <input type="text" placeholder="Nombre y apellido *" value={form.name} onChange={e => onChange({ name: e.target.value })} className={inputCls} />
         <input type="email" placeholder="Tu email *" value={form.email} onChange={e => onChange({ email: e.target.value })} className={inputCls} />
         <input type="tel" placeholder="Teléfono (opcional)" value={form.phone} onChange={e => onChange({ phone: e.target.value })} className={inputCls} />
         <label className="flex items-start gap-3 cursor-pointer">
