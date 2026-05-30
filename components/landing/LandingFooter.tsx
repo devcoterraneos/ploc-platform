@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import { Mail, Phone } from "lucide-react";
 import { org } from "@/lib/landing-config";
+import { useSettings } from "@/lib/settings-context";
 
 function SocialIcon({ href, label, path }: { href: string; label: string; path: string }) {
   if (!href) return null;
@@ -29,6 +32,7 @@ const YOUTUBE_PATH =
   "M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z";
 
 export default function LandingFooter() {
+  const s = useSettings();
   return (
     <footer className="bg-white border-t border-gray-100 py-10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -43,29 +47,29 @@ export default function LandingFooter() {
               className="mb-3"
             />
             <p className="text-sm text-gray-500 leading-relaxed">
-              {org.footerDescription}
+              {s.footerDescription || org.footerDescription}
             </p>
           </div>
 
           {/* Contact + Social */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              {org.email && (
+              {(s.contactEmail || org.email) && (
                 <a
-                  href={`mailto:${org.email}`}
+                  href={`mailto:${s.contactEmail || org.email}`}
                   className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#8B1A1A] transition-colors"
                 >
                   <Mail className="w-4 h-4 flex-shrink-0" />
-                  {org.email}
+                  {s.contactEmail || org.email}
                 </a>
               )}
-              {org.phone && (
+              {(s.contactPhone || org.phone) && (
                 <a
-                  href={`tel:${org.phone}`}
+                  href={`tel:${s.contactPhone || org.phone}`}
                   className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#8B1A1A] transition-colors"
                 >
                   <Phone className="w-4 h-4 flex-shrink-0" />
-                  {org.phone}
+                  {s.contactPhone || org.phone}
                 </a>
               )}
             </div>
