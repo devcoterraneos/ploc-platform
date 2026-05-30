@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
-  Heart, ArrowLeft, Share2, ChevronLeft, ChevronRight,
+  Heart, ArrowLeft, ChevronLeft, ChevronRight,
   Wrench, CheckCircle,
 } from "lucide-react";
 import { formatCLP } from "@/lib/data";
@@ -74,7 +74,6 @@ export default function DonaPage() {
   const [notFound, setNotFound] = useState(false);
   const [showModal, setShowModal]         = useState(false);
   const [modalMethod, setModalMethod]     = useState<"card" | "transfer" | undefined>(undefined);
-  const [copied, setCopied]     = useState(false);
   const [carouselIdx, setCarouselIdx] = useState(0);
 
   useEffect(() => {
@@ -90,17 +89,6 @@ export default function DonaPage() {
         setLoading(false);
       });
   }, [slug]);
-
-  async function handleShare() {
-    const url = window.location.href;
-    if (navigator.share) {
-      await navigator.share({ title: campaign?.name ?? "Campaña PLOC", url });
-    } else {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    }
-  }
 
   if (loading) return <Skeleton />;
 
@@ -320,24 +308,6 @@ export default function DonaPage() {
                     <span className="text-xs opacity-70 mt-0.5">click para ver los datos</span>
                   </button>
                 </div>
-
-                {/* Share */}
-                <button
-                  onClick={handleShare}
-                  className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm"
-                >
-                  {copied ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      ¡Enlace copiado!
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="w-4 h-4" />
-                      Compartir campaña
-                    </>
-                  )}
-                </button>
 
                 <p className="text-xs text-center text-gray-400 mt-4 leading-relaxed">
                   ✓ Donación Certificada por Corporación PLOC
