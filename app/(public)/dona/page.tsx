@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   Heart, ArrowLeft, ChevronLeft, ChevronRight,
-  Wrench, CheckCircle,
+  Wrench, CheckCircle, Share2,
 } from "lucide-react";
 import { formatCLP } from "@/lib/data";
 import supabase from "@/lib/supabase";
@@ -28,6 +28,7 @@ type Campaign = {
   image_gradient: string | null;
   donation_amounts: number[] | null;
   images: { url: string; isPrimary: boolean }[] | null;
+  instagram_url: string | null;
 };
 
 function toModal(c: Campaign): ProjectForModal {
@@ -75,6 +76,7 @@ export default function DonaPage() {
   const [showModal, setShowModal]         = useState(false);
   const [modalMethod, setModalMethod]     = useState<"card" | "transfer" | undefined>(undefined);
   const [carouselIdx, setCarouselIdx] = useState(0);
+  const [copied, setCopied]           = useState(false);
 
   useEffect(() => {
     if (!slug) { setLoading(false); setNotFound(true); return; }
@@ -89,6 +91,19 @@ export default function DonaPage() {
         setLoading(false);
       });
   }, [slug]);
+
+  async function handleShare() {
+    if (!campaign) return;
+    const url  = window.location.href;
+    const text = `¡Te invito a apoyar a ${campaign.name}! 🙌 Cada aporte cuenta para hacer realidad este proyecto en Puerto Octay. Dona aquí 👉 ${url}`;
+    if (navigator.share) {
+      await navigator.share({ title: campaign.name, text, url });
+    } else {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  }
 
   if (loading) return <Skeleton />;
 
@@ -315,22 +330,64 @@ export default function DonaPage() {
               </div>
             </div>
 
-            {/* ── 4. Resources ── mobile:order-4 / desktop:col1 row2 ── */}
-            {campaign.resources_use && (
-              <div className="order-4 lg:col-start-1 lg:row-start-2">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                    <Wrench className="w-4 h-4" style={{ color: primaryColor }} />
+            {/* ── 4. Resources + Org section ── mobile:order-4 / desktop:col1 row2 ── */}
+            <div className="order-4 lg:col-start-1 lg:row-start-2 space-y-7">
+
+              {campaign.resources_use && (
+                <div>
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                      <Wrench className="w-4 h-4" style={{ color: primaryColor }} />
+                    </div>
+                    <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: primaryColor }}>
+                      Uso de los recursos
+                    </h2>
                   </div>
-                  <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: primaryColor }}>
-                    Uso de los recursos
-                  </h2>
+                  <p className="text-gray-700 leading-relaxed pl-[52px]">
+                    {campaign.resources_use}
+                  </p>
                 </div>
-                <p className="text-gray-700 leading-relaxed pl-[52px]">
-                  {campaign.resources_use}
-                </p>
+              )}
+
+              {/* ── Conoce a la organización ── */}
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: primaryColor }}>
+                  Conoce a la organización
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  {campaign.instagram_url && (
+                    <a
+                      href={campaign.instagram_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm text-white transition-all"
+                      style={{ background: "linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)" }}
+                    >
+                      <svg className="w-4 h-4 fill-white flex-shrink-0" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                      Conoce a la organización
+                    </a>
+                  )}
+                  <button
+                    onClick={handleShare}
+                    className="flex items-center gap-2 px-5 py-3 rounded-xl border-2 font-semibold text-sm transition-all"
+                    style={{ borderColor: primaryColor, color: primaryColor }}
+                  >
+                    {copied ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        ¡Copiado!
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-4 h-4" />
+                        Compartir campaña
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-            )}
+
+            </div>
 
           </div>
         </div>

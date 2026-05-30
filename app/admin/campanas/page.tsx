@@ -23,6 +23,7 @@ type Campaign = {
   image_gradient: string | null;
   donation_amounts: number[] | null;
   images: { url: string; isPrimary: boolean }[] | null;
+  instagram_url: string | null;
 };
 
 const emptyForm: Partial<Campaign> = {
@@ -43,6 +44,7 @@ const emptyForm: Partial<Campaign> = {
   image_gradient: "linear-gradient(135deg,#8B1A1A,#B45309)",
   donation_amounts: [5000, 10000, 25000, 50000],
   images: null,
+  instagram_url: "",
 };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -343,6 +345,11 @@ export default function CampanasAdminPage() {
                       <input type="text" value={editItem.category_bg ?? "#FEF3C7"} onChange={e => set("category_bg", e.target.value)} className={INPUT} />
                     </div>
                   </Field>
+                  <div className="col-span-2">
+                    <Field label="Instagram de la organización (URL)">
+                      <input type="url" value={editItem.instagram_url ?? ""} onChange={e => set("instagram_url", e.target.value)} className={INPUT} placeholder="https://instagram.com/nombreorg" />
+                    </Field>
+                  </div>
                 </div>
               </section>
 
