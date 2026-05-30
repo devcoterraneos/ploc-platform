@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   Heart, ArrowLeft, Share2, ChevronLeft, ChevronRight,
-  Wrench, Shield, CheckCircle,
+  Wrench, CheckCircle,
 } from "lucide-react";
 import { formatCLP } from "@/lib/data";
 import supabase from "@/lib/supabase";
@@ -249,20 +249,6 @@ export default function DonaPage() {
               </p>
             )}
 
-            {/* ── 2. Trust signals ── mobile:order-2 / desktop:col1 row3 ── */}
-            <div className="order-2 lg:col-start-1 lg:row-start-3">
-              <hr className="border-gray-100 mb-4" />
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                <span className="flex items-center gap-2 text-sm text-gray-400">
-                  <Shield className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  Pago vía Tarjeta o Transferencia, tú eliges
-                </span>
-                <span className="flex items-center gap-2 text-sm text-gray-400">
-                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  Respaldado por Corporación PLOC
-                </span>
-              </div>
-            </div>
 
             {/* ── 3. Donation card ── mobile:order-3 / desktop:col2 rows1-3 ── */}
             <div className="order-3 lg:col-start-2 lg:row-start-1 lg:row-span-3 lg:sticky lg:top-6">
@@ -354,7 +340,7 @@ export default function DonaPage() {
                 </button>
 
                 <p className="text-xs text-center text-gray-400 mt-4 leading-relaxed">
-                  🔒 Tu donación va directo al proyecto
+                  ✓ Donación Certificada por Corporación PLOC
                 </p>
               </div>
             </div>
