@@ -15,6 +15,7 @@ import {
   Menu,
   LogOut,
   ArrowDownToLine,
+  BarChart2,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import supabase from "@/lib/supabase";
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/admin/donantes",         label: "Donantes",       icon: Heart },
   { href: "/admin/transferencias",   label: "Transferencias", icon: ArrowDownToLine },
   { href: "/admin/socios",           label: "Socios",         icon: Users },
+  { href: "/admin/analytics",        label: "Analytics",      icon: BarChart2 },
   { href: "/admin/configuracion",    label: "Configuración",  icon: Settings },
 ];
 
