@@ -100,10 +100,16 @@ export default function AnalyticsPage() {
     setLoading(true);
     try {
       const res  = await fetch(`/api/analytics?days=${d}`);
-      const json = await res.json();
+      const text = await res.text();
+      let json: AnalyticsData;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        json = { byDate: [], byPath: [], byCountry: [], byDevice: [], error: `Respuesta no válida (${res.status}): ${text.slice(0, 200)}` };
+      }
       setData(json);
-    } catch {
-      setData({ byDate: [], byPath: [], byCountry: [], byDevice: [], error: "No se pudo conectar" });
+    } catch (err: unknown) {
+      setData({ byDate: [], byPath: [], byCountry: [], byDevice: [], error: `Error de red: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
       setLoading(false);
     }
