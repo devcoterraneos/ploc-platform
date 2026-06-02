@@ -124,7 +124,7 @@ export default function AnalyticsPage() {
 
   // Totals
   const totalVisits    = data?.byDate.reduce((s, r) => s + r.sum.visits, 0) ?? 0;
-  const totalPageViews = data?.byDate.reduce((s, r) => s + r.sum.pageViews, 0) ?? 0;
+  const totalPageViews = data?.byPath.reduce((s, r) => s + r.sum.visits, 0) ?? 0;
   const topCountry     = data?.byCountry[0]?.dimensions?.countryName ?? "—";
 
   const mobileVisits  = data?.byDevice.find(r => r.dimensions.deviceType === "mobile")?.sum.visits  ?? 0;
@@ -172,7 +172,7 @@ export default function AnalyticsPage() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard icon={Users}     label="Visitas"      value={totalVisits.toLocaleString("es-CL")}     sub={`últimos ${days} días`} />
-        <StatCard icon={Eye}       label="Páginas vistas" value={totalPageViews.toLocaleString("es-CL")} sub={`últimos ${days} días`} />
+        <StatCard icon={Eye}       label="Páginas activas" value={data?.byPath.length ?? 0} sub="rutas con visitas" />
         <StatCard icon={Globe}     label="Top país"     value={topCountry} />
         <StatCard icon={Smartphone} label="Mobile"      value={`${mobilePct}%`} sub="del total de visitas" />
       </div>

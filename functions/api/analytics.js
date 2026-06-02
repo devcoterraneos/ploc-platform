@@ -31,7 +31,7 @@ export async function onRequestGet(context) {
             limit: ${limit}
             orderBy: [${orderBy}]
           ) {
-            sum { visits pageViews }
+            sum { visits }
             dimensions { ${dimensions} }
           }
         }
