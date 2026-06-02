@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { RefreshCw, CheckCircle, XCircle, Clock, ArrowDownToLine, Plus, X, Save } from "lucide-react";
+import {
+  RefreshCw, CheckCircle, XCircle, Clock, ArrowDownToLine,
+  Plus, X, Save, Edit2, Copy, Trash2,
+} from "lucide-react";
 import { formatCLP } from "@/lib/data";
 import supabase, { isConfigured } from "@/lib/supabase";
 
@@ -49,14 +52,16 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
 };
 
 export default function TransferenciasPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [transfers, setTransfers] = useState<Transfer[]>([]);
-  const [loading,   setLoading]   = useState(true);
-  const [acting,    setActing]    = useState<string | null>(null);
-  const [showForm,  setShowForm]  = useState(false);
-  const [saving,    setSaving]    = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [form,      setForm]      = useState({ ...emptyForm });
+  const [campaigns,      setCampaigns]      = useState<Campaign[]>([]);
+  const [transfers,      setTransfers]      = useState<Transfer[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [acting,         setActing]         = useState<string | null>(null);
+  const [showForm,       setShowForm]       = useState(false);
+  const [editingId,      setEditingId]      = useState<string | null>(null);
+  const [saving,         setSaving]         = useState(false);
+  const [saveError,      setSaveError]      = useState<string | null>(null);
+  const [confirmDelete,  setConfirmDelete]  = useState<string | null>(null);
+  const [form,           setForm]           = useState({ ...emptyForm });
 
   function f<K extends keyof typeof emptyForm>(key: K, value: typeof emptyForm[K]) {
     setForm(p => ({ ...p, [key]: value }));
@@ -87,36 +92,85 @@ export default function TransferenciasPage() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // ── Manual save ──────────────────────────────────────────────────────────
+  // ── Open new form ─────────────────────────────────────────────────────────
+  function openNew() {
+    setEditingId(null);
+    setForm({ ...emptyForm, payment_date: new Date().toISOString().split("T")[0] });
+    setSaveError(null);
+    setShowForm(true);
+  }
+
+  // ── Open edit form ────────────────────────────────────────────────────────
+  function openEdit(t: Transfer) {
+    setEditingId(t.id);
+    setForm({
+      campaign_id:   t.campaign_id   ?? "",
+      campaign_name: t.campaign_name ?? "",
+      donor_name:    t.donor_name    ?? "",
+      donor_email:   t.donor_email   ?? "",
+      amount:        t.amount > 0 ? new Intl.NumberFormat("es-CL").format(t.amount) : "",
+      payment_date:  t.payment_date  ?? new Date().toISOString().split("T")[0],
+      reference:     "",
+    });
+    setSaveError(null);
+    setShowForm(true);
+  }
+
+  // ── Save (new or edit) ────────────────────────────────────────────────────
   async function handleSave() {
     const amount = Number(String(form.amount).replace(/\D/g, ""));
     if (!form.campaign_id || !form.donor_name.trim() || !amount) return;
     setSaving(true);
     setSaveError(null);
+
     try {
       const camp = campaigns.find(c => c.id === form.campaign_id);
-      const { error: insErr } = await supabase.from("donations").insert({
-        commerce_order: `TRANSFER-MANUAL-${Date.now()}`,
-        campaign_id:    form.campaign_id,
-        campaign_name:  camp?.name ?? "",
-        donor_name:     form.donor_name.trim(),
-        donor_email:    form.donor_email.trim() || null,
-        amount,
-        status:         "completed",
-        payment_date:   form.payment_date,
-        paid_at:        new Date(form.payment_date).toISOString(),
-        flow_raw:       { source: "manual_admin", reference: form.reference.trim() || null },
-      });
-      if (insErr) throw new Error(insErr.message);
 
-      // Increment raised
-      const { data: campData } = await supabase.from("campaigns").select("raised").eq("id", form.campaign_id).single();
-      if (campData) {
-        await supabase.from("campaigns").update({ raised: (campData.raised ?? 0) + amount }).eq("id", form.campaign_id);
+      if (editingId) {
+        // ── Edit existing ──
+        const original = transfers.find(t => t.id === editingId);
+        const { error } = await supabase.from("donations").update({
+          campaign_id:   form.campaign_id,
+          campaign_name: camp?.name ?? form.campaign_name,
+          donor_name:    form.donor_name.trim(),
+          donor_email:   form.donor_email.trim() || null,
+          amount,
+          payment_date:  form.payment_date,
+        }).eq("id", editingId);
+        if (error) throw new Error(error.message);
+
+        // If validated and amount changed, adjust campaign raised
+        if (original && original.status === "completed" && original.amount !== amount && form.campaign_id) {
+          const diff = amount - original.amount;
+          const { data: campData } = await supabase.from("campaigns").select("raised").eq("id", form.campaign_id).single();
+          if (campData) {
+            await supabase.from("campaigns").update({ raised: Math.max(0, (campData.raised ?? 0) + diff) }).eq("id", form.campaign_id);
+          }
+        }
+      } else {
+        // ── New manual entry ──
+        const { error: insErr } = await supabase.from("donations").insert({
+          commerce_order: `TRANSFER-MANUAL-${Date.now()}`,
+          campaign_id:    form.campaign_id,
+          campaign_name:  camp?.name ?? "",
+          donor_name:     form.donor_name.trim(),
+          donor_email:    form.donor_email.trim() || null,
+          amount,
+          status:         "completed",
+          payment_date:   form.payment_date,
+          paid_at:        new Date(form.payment_date).toISOString(),
+          flow_raw:       { source: "manual_admin", reference: form.reference.trim() || null },
+        });
+        if (insErr) throw new Error(insErr.message);
+
+        const { data: campData } = await supabase.from("campaigns").select("raised").eq("id", form.campaign_id).single();
+        if (campData) {
+          await supabase.from("campaigns").update({ raised: (campData.raised ?? 0) + amount }).eq("id", form.campaign_id);
+        }
       }
 
-      setForm({ ...emptyForm, payment_date: new Date().toISOString().split("T")[0] });
       setShowForm(false);
+      setEditingId(null);
       await fetchData();
     } catch (err: unknown) {
       setSaveError(err instanceof Error ? err.message : "Error desconocido");
@@ -125,26 +179,58 @@ export default function TransferenciasPage() {
     }
   }
 
-  const isFormValid = !!form.campaign_id && !!form.donor_name.trim() &&
-    Number(String(form.amount).replace(/\D/g, "")) >= 1;
-
-  async function handleValidate(t: Transfer) {
+  // ── Duplicate → borrador ──────────────────────────────────────────────────
+  async function handleDuplicate(t: Transfer) {
     setActing(t.id);
     try {
-      // 1. Update donation status
-      await supabase.from("donations").update({ status: "completed", paid_at: new Date().toISOString() }).eq("id", t.id);
-
-      // 2. Increment campaign raised
-      if (t.campaign_id) {
-        const { data: camp } = await supabase.from("campaigns").select("raised").eq("id", t.campaign_id).single();
-        if (camp) {
-          await supabase.from("campaigns").update({ raised: (camp.raised ?? 0) + t.amount }).eq("id", t.campaign_id);
-        }
-      }
+      await supabase.from("donations").insert({
+        commerce_order: `TRANSFER-DUP-${Date.now()}`,
+        campaign_id:    t.campaign_id,
+        campaign_name:  t.campaign_name,
+        donor_name:     t.donor_name,
+        donor_email:    t.donor_email,
+        amount:         t.amount,
+        status:         "transfer_pending",
+        payment_date:   t.payment_date,
+        flow_raw:       { source: "duplicate" },
+      });
       await fetchData();
     } finally {
       setActing(null);
     }
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  async function handleDelete(t: Transfer) {
+    setActing(t.id);
+    try {
+      await supabase.from("donations").delete().eq("id", t.id);
+
+      // If it was validated, subtract from raised
+      if (t.status === "completed" && t.campaign_id) {
+        const { data: campData } = await supabase.from("campaigns").select("raised").eq("id", t.campaign_id).single();
+        if (campData) {
+          await supabase.from("campaigns").update({ raised: Math.max(0, (campData.raised ?? 0) - t.amount) }).eq("id", t.campaign_id);
+        }
+      }
+      setConfirmDelete(null);
+      await fetchData();
+    } finally {
+      setActing(null);
+    }
+  }
+
+  // ── Validate / Reject ─────────────────────────────────────────────────────
+  async function handleValidate(t: Transfer) {
+    setActing(t.id);
+    try {
+      await supabase.from("donations").update({ status: "completed", paid_at: new Date().toISOString() }).eq("id", t.id);
+      if (t.campaign_id) {
+        const { data: camp } = await supabase.from("campaigns").select("raised").eq("id", t.campaign_id).single();
+        if (camp) await supabase.from("campaigns").update({ raised: (camp.raised ?? 0) + t.amount }).eq("id", t.campaign_id);
+      }
+      await fetchData();
+    } finally { setActing(null); }
   }
 
   async function handleReject(id: string) {
@@ -153,6 +239,9 @@ export default function TransferenciasPage() {
     await fetchData();
     setActing(null);
   }
+
+  const isFormValid = !!form.campaign_id && !!form.donor_name.trim() &&
+    Number(String(form.amount).replace(/\D/g, "")) >= 1;
 
   const pending   = transfers.filter(t => t.status === "transfer_pending");
   const processed = transfers.filter(t => t.status !== "transfer_pending");
@@ -171,10 +260,8 @@ export default function TransferenciasPage() {
           <button onClick={fetchData} className="p-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
             <RefreshCw className="w-4 h-4 text-gray-500" />
           </button>
-          <button
-            onClick={() => { setShowForm(true); setSaveError(null); }}
-            className="flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors"
-          >
+          <button onClick={openNew}
+            className="flex items-center gap-2 bg-[#8B1A1A] hover:bg-[#7A1616] text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors">
             <Plus className="w-4 h-4" /> Registrar manual
           </button>
         </div>
@@ -220,22 +307,18 @@ export default function TransferenciasPage() {
                             {formatCLP(t.amount)}
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleValidate(t)}
-                                disabled={acting === t.id}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 text-xs font-bold transition-colors disabled:opacity-50"
-                              >
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                Validar
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <button onClick={() => handleValidate(t)} disabled={acting === t.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 text-xs font-bold transition-colors disabled:opacity-50">
+                                <CheckCircle className="w-3.5 h-3.5" /> Validar
                               </button>
-                              <button
-                                onClick={() => handleReject(t.id)}
-                                disabled={acting === t.id}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600 text-xs font-bold transition-colors disabled:opacity-50"
-                              >
-                                <XCircle className="w-3.5 h-3.5" />
-                                Anular
+                              <button onClick={() => openEdit(t)} disabled={acting === t.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold transition-colors disabled:opacity-50">
+                                <Edit2 className="w-3.5 h-3.5" /> Editar
+                              </button>
+                              <button onClick={() => handleReject(t.id)} disabled={acting === t.id}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600 text-xs font-bold transition-colors disabled:opacity-50">
+                                <XCircle className="w-3.5 h-3.5" /> Anular
                               </button>
                             </div>
                           </td>
@@ -264,7 +347,7 @@ export default function TransferenciasPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-100 bg-gray-50/50">
-                        {["Fecha", "Donante", "Campaña", "Monto", "Estado"].map((h, i) => (
+                        {["Fecha", "Donante", "Campaña", "Monto", "Estado", ""].map((h, i) => (
                           <th key={i} className="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
@@ -288,7 +371,26 @@ export default function TransferenciasPage() {
                               {formatCLP(t.amount)}
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${st.cls}`}>{st.label}</span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${st.cls}`}>{st.label}</span>
+                                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">Transferencia</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1">
+                                <button onClick={() => openEdit(t)} title="Editar"
+                                  className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors">
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => handleDuplicate(t)} disabled={acting === t.id} title="Duplicar como borrador"
+                                  className="p-1.5 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition-colors disabled:opacity-50">
+                                  <Copy className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => setConfirmDelete(t.id)} title="Eliminar"
+                                  className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -302,13 +404,39 @@ export default function TransferenciasPage() {
         </>
       )}
 
-      {/* ── Manual registration modal ── */}
+      {/* ── Delete confirmation ── */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-base font-bold text-gray-900 mb-2">¿Eliminar transferencia?</h3>
+            <p className="text-sm text-gray-500 mb-5">
+              Si estaba validada, el monto se restará del cómputo de la campaña. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 text-sm border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                Cancelar
+              </button>
+              <button
+                onClick={() => { const t = transfers.find(x => x.id === confirmDelete); if (t) handleDelete(t); }}
+                className="flex-1 py-2.5 text-sm font-bold bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Form modal (new / edit) ── */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-              <h2 className="text-lg font-bold text-gray-900">Registrar transferencia manual</h2>
-              <button onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-gray-100"><X className="w-4 h-4" /></button>
+              <h2 className="text-lg font-bold text-gray-900">
+                {editingId ? "Editar transferencia" : "Registrar transferencia manual"}
+              </h2>
+              <button onClick={() => { setShowForm(false); setEditingId(null); }} className="p-2 rounded-xl hover:bg-gray-100">
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
@@ -336,21 +464,24 @@ export default function TransferenciasPage() {
               <Field label="Fecha de transferencia" required>
                 <input type="date" value={form.payment_date} onChange={e => f("payment_date", e.target.value)} className={INPUT} />
               </Field>
-              <Field label="Referencia / N° comprobante (opcional)">
-                <input type="text" value={form.reference} onChange={e => f("reference", e.target.value)} className={INPUT} placeholder="Ej: 123456789 / Banco de Chile" />
-              </Field>
+              {!editingId && (
+                <Field label="Referencia / N° comprobante (opcional)">
+                  <input type="text" value={form.reference} onChange={e => f("reference", e.target.value)} className={INPUT} placeholder="Ej: 123456789 / Banco de Chile" />
+                </Field>
+              )}
             </div>
 
             <div className="px-6 pb-5 pt-3 border-t border-gray-100 flex-shrink-0">
               {saveError && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-3">{saveError}</p>}
               <div className="flex gap-3">
-                <button onClick={() => setShowForm(false)} className="flex-1 py-2.5 text-sm font-medium border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                <button onClick={() => { setShowForm(false); setEditingId(null); }}
+                  className="flex-1 py-2.5 text-sm font-medium border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                   Cancelar
                 </button>
                 <button onClick={handleSave} disabled={!isFormValid || saving}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold bg-[#8B1A1A] text-white rounded-xl hover:bg-[#7A1616] transition-colors disabled:opacity-50">
                   <Save className="w-4 h-4" />
-                  {saving ? "Guardando..." : "Registrar"}
+                  {saving ? "Guardando..." : editingId ? "Guardar cambios" : "Registrar"}
                 </button>
               </div>
             </div>
